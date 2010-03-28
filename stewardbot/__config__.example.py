@@ -74,7 +74,7 @@ config = {
 				'wikipedia/Wutsje':'Wutsje',
 
 				# guests
-				'wikia/Charitwo':'Charitwo',
+				'wikia/vstf/countervandalism.user.Charitwo':'Charitwo',
 				'wikimedia/Az1568':'Az1568',
 				'wikipedia/Bsadowski1':'Bsadowski1',
 				'wikipedia/Chris-G':'Chris G',
@@ -84,18 +84,15 @@ config = {
 				'wikimedia/Jamesofur':'Jamesofur',
 				'Wikimedia/Kanonkas':'Kanonkas',
 				'wikimedia/Kylu':'Kylu',
-				'wikimedia/Luckas-Blade':'Luckas Blade',
 				'wikimedia/Maximillion-Pegasus':'Maximillion Pegasus',
 				'wikimedia/MuZemike':'Muzemike',
 				'wikimedia/Juliancolton':'Juliancolton',
 				'wikipedia/NuclearWarfare':'NuclearWarfare',
-				'wikimedia/Pmlinediter':'Pmlinediter',
+				'wikimedia/pmlineditor':'Pmlineditor',
 				'wikipedia/Prodego':'Prodego',
 				'wiktionary/Razorflame':'Razorflame',
-				'Wikimedia/Techman224':'Techman224',
 				'wikipedia/The-Thing-That-Should-Not-Be':'The Thing That Should Not Be',
-				'wikipedia/Tiptoety':'Tiptoety',
-				'wikipedia/Winhunter':'Winhunter'
+				'wikipedia/Tiptoety':'Tiptoety'
 			},
 			# operators (full access)
 			_INDEX_OPERATORS:{
