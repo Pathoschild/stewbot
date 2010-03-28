@@ -63,7 +63,8 @@ class Stewardbot( BaseClass ):
 			users          = config['irc']['users_by_level'],
 			banned         = config['irc']['ignore_masks'],
 			command_prefix = config['irc']['command_prefix'],
-			command_delimiter = config['irc']['command_delimiter']
+			command_delimiter = config['irc']['command_delimiter'],
+			no_commit_commands = config['irc']['commands_nocommit']
 		)
 
 		self.browser = Browser(
