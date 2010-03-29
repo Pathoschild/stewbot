@@ -24,6 +24,7 @@ config = {
 		'user':'ExampleUserName',
 		'pass':'',
 		'chans':['#stewardbot'],
+		'ssl':False, # If you have this set to True, make sure you change the port to ssl port 7070 or 7000
 
 		# options
 		'confirm_all':0, # report all successes to channel (if another bot isn't reporting CentralAuth actions or global blocks)
@@ -57,7 +58,7 @@ config = {
 				'wikimedia/erwin':'Erwin',
 				'wikimedia/guillom':'Guillom',
 				'wikipedia/jdelanoy':'J.delanoy',
-				'wikimedia/jhs':'Jon Harald Søby',
+				'wikimedia/jhs':'Jon Harald SÃ¸by',
 				'wikipedia/Jyothis':'Jyothis',
 				'wikimedia/Kylu':'Kylu',
 				'kamfjord.org':'Laaknor',
