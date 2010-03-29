@@ -26,6 +26,7 @@ bot = Stewardbot(
 	nick             = config['irc']['nick'],
 	user             = config['irc']['user'],
 	password         = config['irc']['pass'],
-	channels         = config['irc']['chans']
+	channels         = config['irc']['chans'],
+	ssl              = config['irc']['ssl']
 )
 bot.processForever()
