@@ -25,7 +25,7 @@ class Stewardbot( BaseClass ):
 	##	Constructor
 	##	Initializes properties & settings, instantiates required classes.
 	#############################################################################################################
-	def __init__( self, server, port, nick, user, password, channels ):
+	def __init__( self, server, port, nick, user, password, channels, ssl ):
 		BaseClass.__init__( self, config['debug']['verbose'] )
 		self.__name__ = 'Stewardbot'
 		self.trace()
@@ -83,6 +83,7 @@ class Stewardbot( BaseClass ):
 			user     = user,
 			password = password,
 			chans    = channels,
+			ssl      = ssl,
 			default_quit_reason = config['irc']['quit_reason'],
 			callback_pubmsg     = self.onPublicMessage
 		)
