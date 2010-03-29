@@ -29,6 +29,7 @@ class IRC( BaseClass ):
 		nick,
 		user,
 		password,
+		ssl,
 		chans = None,
 		debug = False,
 		default_quit_reason = '*poof*',
@@ -46,6 +47,7 @@ class IRC( BaseClass ):
 		self.nick    = nick
 		self.user    = user
 		self.password= password
+		self.ssl = ssl
 		self.chans   = chans
 		self.callback_pubmsg = callback_pubmsg
 
@@ -121,7 +123,10 @@ class IRC( BaseClass ):
 	###################
 	def connect( self ):
 		self.trace()
-		self.server.connect( self.address, self.port, self.nick, self.password, self.user )
+		if self.ssl == True:
+			self.server.connect( self.address, self.port, self.nick, self.password, self.user, ssl=True )
+		else:
+			self.server.connect( self.address, self.port, self.nick, self.password, self.user )
 
 	def onConnect( self, conn, event ):
 		self.trace()
