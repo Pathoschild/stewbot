@@ -41,7 +41,10 @@ class BaseClass( object ):
 	class Error( Exception ):
 		"""Base error class"""
 	class LoginTokenRequestedError( Error ):
-		"""Indicates a login token must be sent back to complete login (MediaWiki 1.15.3+)."""
+		"""
+		Indicates a login token must be sent back to complete login (MediaWiki 1.15.3+);
+		the exception message is the token.
+		"""
 
 	###################
 	##	Format argument
