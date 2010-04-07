@@ -385,20 +385,25 @@ class Browser( BaseClass ):
 		## Login
 		#######
 		elif self.parsed.getElementsByTagName( 'login' ):
-			result = self.parse( self.parsed.getElementsByTagName('login')[0].getAttribute('result') )
+			error  = self.parsed.getElementsByTagName('login')[0]
+			result = self.parse( error.getAttribute('result') )
 			if result != 'Success':
-				raise self.Error, {
-					'NoName':'NoName: You didn\'t set the lgname parameter',
-					'Illegal':'Illegal: You provided an illegal username',
-					'NoName':'NoName: You didn\'t set the lgname parameter',
-					'Illegal':'Illegal: You provided an illegal username',
-					'NotExists':'NotExists: The username you provided doesn\'t exist',
-					'EmptyPass':'EmptyPass: You didn\'t set the lgpassword parameter or you left it empty',
-					'WrongPass':'WrongPass: The password you provided is incorrect',
-					'WrongPluginPass':'WrongPluginPass: The password you provided is incorrect; an authentication plugin rather than MediaWiki itself rejected the password',
-					'CreateBlocked':'CreateBlocked: The wiki tried to automatically create a new account for you, but your IP address has been blocked from account creation',
-					'Throttled':'Throttled: You\'ve logged in too many times in a short time'
-				}.get(result, 'unknown error: "%s"')
+				if result == 'NeedToken':
+					raise self.LoginTokenRequestedError, self.parse( error.getAttribute('token') )
+				else:
+					raise self.Error, {
+						'NoName':'NoName: You didn\'t set the lgname parameter',
+						'Illegal':'Illegal: You provided an illegal username',
+						'NoName':'NoName: You didn\'t set the lgname parameter',
+						'Illegal':'Illegal: You provided an illegal username',
+						'NotExists':'NotExists: The username you provided doesn\'t exist',
+						'EmptyPass':'EmptyPass: You didn\'t set the lgpassword parameter or you left it empty',
+						'WrongPass':'WrongPass: The password you provided is incorrect',
+						'WrongToken':'WrongToken: The server asked to resubmit with a confirmation token, but refused the token it was given.',
+						'WrongPluginPass':'WrongPluginPass: The password you provided is incorrect; an authentication plugin rather than MediaWiki itself rejected the password',
+						'CreateBlocked':'CreateBlocked: The wiki tried to automatically create a new account for you, but your IP address has been blocked from account creation',
+						'Throttled':'Throttled: You\'ve logged in too many times in a short time'
+					}.get(result, 'unknown error: "%s"' % result)
 
 		#######
 		## prop=info
@@ -434,12 +439,22 @@ class Browser( BaseClass ):
 		self.trace()
 
 		if force_login or not self.sessions[self.url_base]['logged_in']:
-			# log in
-			self.queryApi({
-				'action':'login',
-				'lgname':self.username,
-				'lgpassword':self.password
-			}, censor_url = True)
+			# send initial login request
+			try:
+				self.queryApi({
+					'action':'login',
+					'lgname':self.username,
+					'lgpassword':self.password
+				}, censor_url = True)
+			
+			# In MediaWiki 1.15.3+, an extra step is needed
+			except self.LoginTokenRequestedError, token:
+				self.queryApi({
+					'action':'login',
+					'lgname':self.username,
+					'lgpassword':self.password,
+					'lgtoken':token
+				}, censor_url = True)
 
 			# store session
 			self.storeSession( self.url_base, self.username )
