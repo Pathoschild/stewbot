@@ -32,7 +32,7 @@ class Browser( BaseClass ):
 		self.max_api_items = max_api_items
 
 		# browser
-		self.browser = mechanize.Browser()
+		self.browser = mechanize.Browser(factory=mechanize.RobustFactory())
 		self.browser.addheaders = [('User-agent', user_agent)]
 		self.browser.set_handle_robots( obey_robot_rules )
 
@@ -233,6 +233,10 @@ class Browser( BaseClass ):
 		# load page
 		if visit:
 			self.response = self.browser.open( url, parameters )
+			
+			# bugfix -- mechanize confused by <br/>
+			self.response.set_data(self.response.get_data().replace("<br/>", "<br />"))
+			self.browser.set_response(self.response)
 		else:
 			self.response = self.browser.open_novisit( url, parameters )
 
