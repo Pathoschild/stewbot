@@ -790,69 +790,65 @@ class Browser( BaseClass ):
 	##	CentralAuth actions
 	##	required: setBaseUrl() to metawiki
 	###################
-	def centralAuth( self, user, reason = '', lock = None, hide = None, delete = None, blockMeta = False, ignoreUnchanged = False ):
+	def centralAuth( self, user, reason = '', lock = None, hide = None, oversightLocal = None, ignoreUnchanged = False ):
 		self.trace()
 		self.login()
 
-		##############
-		## CentralAuth action
-		##############
 		# validate
-		if delete:
-			raise self.Error, 'global account deletion is disabled'
-		if lock == None and hide == None:
+		if lock == None and hide == None and oversightLocal == None:
 			raise self.Error, 'no lock or hide preferences specified'
-		if lock not in (True, False, None) or hide not in (True, False, None):
+		if lock not in (True, False, None) or hide not in (True, False, None) or oversightLocal not in (True, False, None):
 			raise self.Error, 'hide and lock preferences must be one of (True, False, None)'
-
-		# load page
+		
+		# load form
 		self.load( title = 'Special:CentralAuth', parameters = {'target':user}, GET = True, visit = True, parse_as = 'html' )
-
-		# find correct form
 		try:
 			self.browser.select_form( predicate = lambda form: 'wpMethod' in [item.name for item in form.controls] and form['wpMethod'] == 'set-status' )
 		except mechanize.FormNotFoundError:
 			raise self.Error, 'could not find set-status form from Special:CentralAuth'
 
-		# fetch elements
-		check_lock = self.browser.find_control( 'wpStatusLocked' ).items[0]
-		check_hide = self.browser.find_control( 'wpStatusHidden' ).items[0]
+		# parse input
+		NAME_LOCK = 'wpStatusLocked'
+		NAME_HIDE = 'wpStatusHidden'
+		
+		LOCK_IGNORE = None
+		LOCK_NO     = "0"
+		LOCK_YES    = "1"
+		HIDE_NO     = ""
+		HIDE_IGNORE = None
+		HIDE_LISTS  = "lists"
+		HIDE_SUPPRESSED = "suppressed"
+		set_lock = LOCK_YES if lock else LOCK_NO if lock != None else LOCK_IGNORE
+		set_hide = HIDE_SUPPRESSED if oversightLocal else HIDE_LISTS if hide else HIDE_NO if hide != None else HIDE_IGNORE
 
-		# redundant?
-		if (lock == None or check_lock.selected == bool(lock)) and (hide == None or check_hide.selected == bool(hide)):
+		# constants are invalid?
+		if set_lock != LOCK_IGNORE and set_lock not in [k.name for k in self.browser.find_control(NAME_LOCK).items]:
+			raise self.Error, 'invalid lock constant "%s", valid types are [%s]' % (set_lock, ', '.join([k.name for k in self.browser.find_control(NAME_LOCK).items]))
+		if set_hide != HIDE_IGNORE and set_hide not in [k.name for k in self.browser.find_control(NAME_HIDE).items]:
+			raise self.Error, 'invalid hide constant "%s", valid types are [%s]' % (set_hide, ', '.join([k.name for k in self.browser.find_control(NAME_HIDE).items]))
+		
+		# command is redundant?
+		if set_lock in [LOCK_IGNORE, self.browser[NAME_LOCK][0]] and set_hide in [HIDE_IGNORE, self.browser[NAME_HIDE][0]]:
 			if ignoreUnchanged:
 				return False
-
 			error = 'The global account "%s" is already ' % user
-			if lock != None:
-				error += 'locked' if lock else 'unlocked'
-			if hide != None:
-				if lock != None:
+			if set_lock != None:
+				error += 'locked' if set_lock == LOCK_YES else 'unlocked'
+			if set_hide != None:
+				if set_lock != None:
 					error += ' and '
-				error += 'hidden' if hide else 'unhidden'
+				error += 'hidden' if set_hide == HIDE_LISTS else 'globally oversighted' if set_hide == HIDE_SUPPRESSED else 'unhidden'
 			raise self.Error, error
-
-		# set values
-		if lock != None:
-			check_lock.selected = lock
-		if hide != None:
-			check_hide.selected = hide
-		self.browser.form['wpReason'] = reason
-
+		
+		# modify form
+		if set_lock != LOCK_IGNORE:
+			control = self.browser.find_control(NAME_LOCK).get(set_lock).selected = True
+		if set_hide != HIDE_IGNORE:
+			control = self.browser.find_control(NAME_HIDE).get(set_hide).selected = True
+		self.browser["wpReason"] = reason
+		
 		self.submit()
 		return True
-
-		##############
-		## Lock IP on Meta
-		##############
-		#if blockMeta && re_ip_address.match(user):
-		#	self.block(
-		#		user   = user,
-		#		expiry = 'never',
-		#		reason = 'globally locked: "%s"' % reason,
-		#		anononly = True,
-		#		nocreate = True
-		#	)
 
 
 	###################

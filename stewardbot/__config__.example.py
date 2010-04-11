@@ -83,6 +83,7 @@ config = {
 				'wikimedia/GrooveDog':'GrooveDog',
 				'wikimedia/Innv':'Innv',
 				'wikimedia/Jamesofur':'Jamesofur',
+				'wikia/vstf/countervandalism.user.Grunny':'Grunny',
 				'Wikimedia/Kanonkas':'Kanonkas',
 				'wikimedia/Kylu':'Kylu',
 				'wikimedia/Maximillion-Pegasus':'Maximillion Pegasus',
@@ -108,7 +109,7 @@ config = {
 		'commands_by_level':{
 			_INDEX_OPEN:['help', 'activity', 'links', 'lookup', 'scanedits', 'showrights', 'translate', 'bash', 'debug', 'queue'],
 			_INDEX_USERS:['config', 'exit', 'reset'],
-			_INDEX_OPERATORS:['block', 'blockhide', 'checkuser', 'delete', 'lock', 'hide', 'lockhide', 'unlock', 'unhide', 'gblock', 'gunblock', 'setrights', 'stab', 'stabhide', 'unblock', 'wikiset', 'withlist', 'commit', 'cancel']
+			_INDEX_OPERATORS:['block', 'blockhide', 'checkuser', 'delete', 'lock', 'globaloversight', 'hide', 'lockhide', 'unlock', 'unhide', 'gblock', 'gunblock', 'setrights', 'stab', 'stabhide', 'unblock', 'wikiset', 'withlist', 'commit', 'cancel']
 		},
 		'commands_nocommit':['commit', 'cancel', 'checkuser', 'queue']
 	},
@@ -196,6 +197,7 @@ documentation = {
 	'lock':'lock a global account; syntax is \'!lock name\' or \'!lock name > reason\'',
 	'hide':'hide a global account; syntax is \'!hide name\' or \'!hide name > reason\'',
 	'lockhide':'lock and hide a global account; syntax is \'!lockhide name\' or \'!lockhide name > reason\'',
+	'globaloversight':'Lock and hide a global account, and oversight its local name on all local wikis (this will oversight them in edit histories, which may violate the oversight policy; use with care); syntax is \'!globalOversight name\'',
 	'unlock':'unlock a global account; syntax is \'!unlock name\' or \'!unlock name > reason\'',
 	'unhide':'unhide a global account; syntax is \'!unhide name\' or \'!unhide name > reason\'',
 

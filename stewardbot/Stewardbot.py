@@ -327,6 +327,8 @@ class Stewardbot( BaseClass ):
 		self.handleCentralAuthCommand( data )
 	def handle_lockhide( self, data ):
 		self.handleCentralAuthCommand( data )
+	def handle_globaloversight( self, data ):
+		self.handleCentralAuthCommand( data )
 	def handleCentralAuthCommand( self, data ):
 		self.trace()
 
@@ -339,13 +341,13 @@ class Stewardbot( BaseClass ):
 			return
 
 		# prepare centralauth values
-		lock   = True if command in ['lock', 'lockhide'] else False if command=='unlock' else None
+		lock   = True if command in ['lock', 'hide', 'lockhide', 'globaloversight'] else False if command=='unlock' else None
 		hide   = True if command in ['hide', 'lockhide'] else False if command=='unhide' else None
-		delete = True if command=='delete' else None
+		globalOversight = True if command == 'globaloversight' else None
 
 		# prepare reason
 		if len(args) <= REASON:
-			if lock or hide or delete:
+			if lock or hide:
 				args.append( config['web']['default_ca_reason'] )
 			else:
 				args.append('')
@@ -356,7 +358,8 @@ class Stewardbot( BaseClass ):
 				user   = args[USER],
 				reason = args[REASON],
 				lock   = lock,
-				hide   = hide
+				hide   = hide,
+				oversightLocal = globalOversight
 			)
 			if self.options['confirm_all']:
 				self.respond( data, 'done' )
