@@ -16,7 +16,7 @@ them clearly from Python attributes.
                   |   ---MSIEBase |       \
                   |  /      |     |        \
                   | /   MSIEDBCookieJar BSDDBCookieJar
-                  |/
+                  |/    
                MSIECookieJar
 
 Comments to John J Lee <jjl@pobox.com>.
@@ -302,9 +302,9 @@ class Cookie:
     version: integer;
     name: string;
     value: string (may be None);
-    port: string; None indicates no attribute was supplied (eg. "Port", rather
+    port: string; None indicates no attribute was supplied (e.g. "Port", rather
      than eg. "Port=80"); otherwise, a port string (eg. "80") or a port list
-     string (eg. "80,8080")
+     string (e.g. "80,8080")
     port_specified: boolean; true if a value was supplied with the Port
      cookie-attribute
     domain: string;
@@ -560,11 +560,11 @@ class DefaultCookiePolicy(CookiePolicy):
     strict_ns_domain: flags indicating how strict to be with domain-matching
      rules for Netscape cookies:
       DomainStrictNoDots: when setting cookies, host prefix must not contain a
-       dot (eg. www.foo.bar.com can't set a cookie for .bar.com, because
+       dot (e.g. www.foo.bar.com can't set a cookie for .bar.com, because
        www.foo contains a dot)
       DomainStrictNonDomain: cookies that did not explicitly specify a Domain
        cookie-attribute can only be returned to a domain that string-compares
-       equal to the domain that set the cookie (eg. rockets.acme.com won't
+       equal to the domain that set the cookie (e.g. rockets.acme.com won't
        be returned cookies from acme.com that had no Domain cookie-attribute)
       DomainRFC2965Match: when setting cookies, require a full RFC 2965
        domain-match
@@ -1158,19 +1158,14 @@ class CookieJar:
         return attrs
 
     def add_cookie_header(self, request):
-        """Add correct Cookie: header to request (urllib2.Request object).
+        """Add correct Cookie: header to request (mechanize.Request object).
 
         The Cookie2 header is also added unless policy.hide_cookie2 is true.
 
-        The request object (usually a urllib2.Request instance) must support
+        The request object (usually a mechanize.Request instance) must support
         the methods get_full_url, get_host, is_unverifiable, get_type,
         has_header, get_header, header_items and add_unredirected_header, as
-        documented by urllib2, and the port attribute (the port number).
-        Actually, RequestUpgradeProcessor will automatically upgrade your
-        Request object to one with has_header, get_header, header_items and
-        add_unredirected_header, if it lacks those methods, for compatibility
-        with pre-2.4 versions of urllib2.
-
+        documented by urllib2.
         """
         debug("add_cookie_header")
         cookies = self.cookies_for_request(request)
@@ -1389,7 +1384,7 @@ class CookieJar:
         for cookie in cookies:
             if cookie.version == 1:
                 cookie.rfc2109 = True
-                if rfc2109_as_netscape:
+                if rfc2109_as_netscape: 
                     # treat 2109 cookies as Netscape cookies rather than
                     # as RFC2965 cookies
                     cookie.version = 0
@@ -1495,9 +1490,9 @@ class CookieJar:
         returns a mimetools.Message object (in fact, the 'mimetools.Message
         object' may be any object that provides a getheaders method).
 
-        The request object (usually a urllib2.Request instance) must support
+        The request object (usually a mechanize.Request instance) must support
         the methods get_full_url, get_type, get_host, and is_unverifiable, as
-        documented by urllib2, and the port attribute (the port number).  The
+        documented by mechanize, and the port attribute (the port number).  The
         request is used to set default values for cookie-attributes as well as
         for checking that the cookie is OK to be set.
 

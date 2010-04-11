@@ -9,7 +9,7 @@ included with the distribution).
 
 """
 
-import urllib2, copy, re, os, urllib
+import copy, re, os, urllib, urllib2
 
 
 from _html import DefaultFactory
@@ -17,9 +17,10 @@ import _response
 import _request
 import _rfc3986
 import _sockettimeout
+import _urllib2_fork
 from _useragent import UserAgentBase
 
-__version__ = (0, 1, 11, None, None)  # 0.1.11
+__version__ = (0, 1, 12, None, None)  # 0.1.12
 
 class BrowserStateError(Exception): pass
 class LinkNotFoundError(Exception): pass
@@ -62,7 +63,7 @@ class History:
         del self._history[:]
 
 
-class HTTPRefererProcessor(urllib2.BaseHandler):
+class HTTPRefererProcessor(_urllib2_fork.BaseHandler):
     def http_request(self, request):
         # See RFC 2616 14.36.  The only times we know the source of the
         # request URI has a URI associated with it are redirect, and
@@ -81,13 +82,13 @@ class Browser(UserAgentBase):
     """Browser-like class with support for history, forms and links.
 
     BrowserStateError is raised whenever the browser is in the wrong state to
-    complete the requested operation - eg., when .back() is called when the
+    complete the requested operation - e.g., when .back() is called when the
     browser history is empty, or when .follow_link() is called when the current
     response does not contain HTML data.
 
     Public attributes:
 
-    request: current request (mechanize.Request or urllib2.Request)
+    request: current request (mechanize.Request)
     form: currently selected form (see .select_form())
 
     """
@@ -110,7 +111,6 @@ class Browser(UserAgentBase):
         history: object implementing the mechanize.History interface.  Note
          this interface is still experimental and may change in future.
         request_class: Request class to use.  Defaults to mechanize.Request
-         by default for Pythons older than 2.4, urllib2.Request otherwise.
 
         The Factory and History objects passed in are 'owned' by the Browser,
         so they should not be shared across Browsers.  In particular,
@@ -128,10 +128,7 @@ class Browser(UserAgentBase):
         self._history = history
 
         if request_class is None:
-            if not hasattr(urllib2.Request, "add_unredirected_header"):
-                request_class = _request.Request
-            else:
-                request_class = urllib2.Request  # Python >= 2.4
+            request_class = _request.Request
 
         if factory is None:
             factory = DefaultFactory()
@@ -148,7 +145,7 @@ class Browser(UserAgentBase):
     def close(self):
         UserAgentBase.close(self)
         if self._response is not None:
-            self._response.close()
+            self._response.close()    
         if self._history is not None:
             self._history.close()
             self._history = None
@@ -277,7 +274,7 @@ class Browser(UserAgentBase):
         """Return a copy of the current response.
 
         The returned object has the same interface as the object returned by
-        .open() (or urllib2.urlopen()).
+        .open() (or mechanize.urlopen()).
 
         """
         return copy.copy(self._response)
@@ -418,7 +415,7 @@ class Browser(UserAgentBase):
     def forms(self):
         """Return iterable over forms.
 
-        The returned form objects implement the ClientForm.HTMLForm interface.
+        The returned form objects implement the mechanize.HTMLForm interface.
 
         """
         if not self.viewing_html():
@@ -432,7 +429,7 @@ class Browser(UserAgentBase):
         The "global" form object contains all controls that are not descendants
         of any FORM element.
 
-        The returned form object implements the ClientForm.HTMLForm interface.
+        The returned form object implements the mechanize.HTMLForm interface.
 
         This is a separate method since the global form is not regarded as part
         of the sequence of forms in the document -- mostly for
@@ -530,7 +527,7 @@ class Browser(UserAgentBase):
             raise FormNotFoundError("no form matching "+description)
 
     def click(self, *args, **kwds):
-        """See ClientForm.HTMLForm.click for documentation."""
+        """See mechanize.HTMLForm.click for documentation."""
         if not self.viewing_html():
             raise BrowserStateError("not viewing HTML")
         request = self.form.click(*args, **kwds)
@@ -539,7 +536,7 @@ class Browser(UserAgentBase):
     def submit(self, *args, **kwds):
         """Submit current form.
 
-        Arguments are as for ClientForm.HTMLForm.click().
+        Arguments are as for mechanize.HTMLForm.click().
 
         Return value is same as for Browser.open().
 
@@ -602,7 +599,7 @@ class Browser(UserAgentBase):
 
         If a matching link is not found, mechanize.LinkNotFoundError is raised.
 
-        text: link text between link tags: eg. <a href="blah">this bit</a> (as
+        text: link text between link tags: e.g. <a href="blah">this bit</a> (as
          returned by pullparser.get_compressed_text(), ie. without tags but
          with opening tags "textified" as per the pullparser docs) must compare
          equal to this argument, if supplied
@@ -614,7 +611,7 @@ class Browser(UserAgentBase):
         url, url_regex: as for text and text_regex, but matched against the
          URL of the link tag (note this matches against Link.url, which is a
          relative or absolute URL according to how it was written in the HTML)
-        tag: element name of opening tag, eg. "a"
+        tag: element name of opening tag, e.g. "a"
         predicate: a function taking a Link object as its single argument,
          returning a boolean result, indicating whether the links
         nr: matches the nth link that matches all other criteria (default 0)
@@ -626,7 +623,7 @@ class Browser(UserAgentBase):
             raise LinkNotFoundError()
 
     def __getattr__(self, name):
-        # pass through ClientForm / DOMForm methods and attributes
+        # pass through _form.HTMLForm methods and attributes
         form = self.__dict__.get("form")
         if form is None:
             raise AttributeError(
@@ -645,7 +642,6 @@ class Browser(UserAgentBase):
         if not self.viewing_html():
             raise BrowserStateError("not viewing HTML")
 
-        found_links = []
         orig_nr = nr
 
         for link in links:

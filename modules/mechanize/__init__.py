@@ -32,7 +32,6 @@ __all__ = [
     'HTTPRedirectHandler',
     'HTTPRefererProcessor',
     'HTTPRefreshProcessor',
-    'HTTPRequestUpgradeProcessor',
     'HTTPResponseDebugProcessor',
     'HTTPRobotRulesProcessor',
     'HTTPSClientCertMgr',
@@ -53,13 +52,11 @@ __all__ = [
     'ProxyDigestAuthHandler',
     'ProxyHandler',
     'Request',
-    'ResponseUpgradeProcessor',
     'RobotExclusionError',
     'RobustFactory',
     'RobustFormsFactory',
     'RobustLinksFactory',
     'RobustTitleFactory',
-    'SeekableProcessor',
     'SeekableResponseOpener',
     'TitleFactory',
     'URLError',
@@ -75,10 +72,47 @@ __all__ = [
     'make_response',
     'request_host',
     'response_seek_wrapper',  # XXX deprecate in public interface?
-    'seek_wrapped_response'   # XXX should probably use this internally in place of response_seek_wrapper()
+    'seek_wrapped_response',   # XXX should probably use this internally in place of response_seek_wrapper()
     'str2time',
     'urlopen',
-    'urlretrieve']
+    'urlretrieve',
+    'urljoin',
+
+    # ClientForm API
+    'AmbiguityError',
+    'ControlNotFoundError',
+    'FormParser',
+    'ItemCountError',
+    'ItemNotFoundError',
+    'LocateError',
+    'Missing',
+    'ParseFile',
+    'ParseFileEx',
+    'ParseResponse',
+    'ParseResponseEx',
+    'ParseString',
+    'XHTMLCompatibleFormParser',
+    # deprecated
+    'CheckboxControl',
+    'Control',
+    'FileControl',
+    'HTMLForm',
+    'HiddenControl',
+    'IgnoreControl',
+    'ImageControl',
+    'IsindexControl',
+    'Item',
+    'Label',
+    'ListControl',
+    'PasswordControl',
+    'RadioControl',
+    'ScalarControl',
+    'SelectControl',
+    'SubmitButtonControl',
+    'SubmitControl',
+    'TextControl',
+    'TextareaControl',
+    ]
 
 import logging
 import sys
@@ -93,26 +127,22 @@ from _mechanize import \
 # configurable URL-opener interface
 from _useragent import UserAgentBase, UserAgent
 from _html import \
-     ParseError, \
      Link, \
      Factory, DefaultFactory, RobustFactory, \
      FormsFactory, LinksFactory, TitleFactory, \
      RobustFormsFactory, RobustLinksFactory, RobustTitleFactory
 
-# urllib2 work-alike interface (part from mechanize, part from urllib2)
-# This is a superset of the urllib2 interface.
+# urllib2 work-alike interface.  This is a superset of the urllib2 interface.
 from _urllib2 import *
 
 # misc
+from _http import HeadParser
+from _http import XHTMLCompatibleHeadParser
 from _opener import ContentTooShortError, OpenerFactory, urlretrieve
-from _util import http2time as str2time
 from _response import \
      response_seek_wrapper, seek_wrapped_response, make_response
-from _http import HeadParser
-try:
-    from _http import XHTMLCompatibleHeadParser
-except ImportError:
-    pass
+from _rfc3986 import urljoin
+from _util import http2time as str2time
 
 # cookies
 from _clientcookie import Cookie, CookiePolicy, DefaultCookiePolicy, \
@@ -129,6 +159,44 @@ if sys.version_info[:2] > (2,4):
         from _firefox3cookiejar import Firefox3CookieJar
 from _mozillacookiejar import MozillaCookieJar
 from _msiecookiejar import MSIECookieJar
+
+# forms
+from _form import (
+    AmbiguityError,
+    ControlNotFoundError,
+    FormParser,
+    ItemCountError,
+    ItemNotFoundError,
+    LocateError,
+    Missing,
+    ParseError,
+    ParseFile,
+    ParseFileEx,
+    ParseResponse,
+    ParseResponseEx,
+    ParseString,
+    XHTMLCompatibleFormParser,
+    # deprecated
+    CheckboxControl,
+    Control,
+    FileControl,
+    HTMLForm,
+    HiddenControl,
+    IgnoreControl,
+    ImageControl,
+    IsindexControl,
+    Item,
+    Label,
+    ListControl,
+    PasswordControl,
+    RadioControl,
+    ScalarControl,
+    SelectControl,
+    SubmitButtonControl,
+    SubmitControl,
+    TextControl,
+    TextareaControl,
+    )
 
 # If you hate the idea of turning bugs into warnings, do:
 # import mechanize; mechanize.USE_BARE_EXCEPT = False

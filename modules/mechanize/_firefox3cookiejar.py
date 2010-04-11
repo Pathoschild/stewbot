@@ -10,7 +10,6 @@ COPYING.txt included with the distribution).
 
 import logging
 import time
-import sqlite3
 
 from _clientcookie import CookieJar, Cookie, MappingIterator
 from _util import isstringlike, experimental
@@ -58,6 +57,7 @@ class Firefox3CookieJar(CookieJar):
             self.connect()
 
     def connect(self):
+        import sqlite3  # not available in Python 2.4 stdlib
         self._conn = sqlite3.connect(self.filename)
         self._conn.isolation_level = "DEFERRED"
         self._create_table_if_necessary()
@@ -87,8 +87,7 @@ class Firefox3CookieJar(CookieJar):
         cur = self._conn.cursor()
         try:
             cur.execute(query, params)
-            for row in cur.fetchall():
-                yield row
+            return cur.fetchall()
         finally:
             cur.close()
 
@@ -216,7 +215,7 @@ SELECT * FROM moz_cookies ORDER BY name, path, host"""):
         session_cookies = CookieJar._cookies_for_request(self, request)
         def get_cookies(cur):
             query = cur.execute("SELECT host from moz_cookies")
-            domains = [row[0] for row in query.fetchmany()]
+            domains = [row[0] for row in query.fetchall()]
             cookies = []
             for domain in domains:
                 cookies += self._persistent_cookies_for_domain(domain,
@@ -233,7 +232,7 @@ SELECT * FROM moz_cookies ORDER BY name, path, host"""):
         query = cur.execute("""\
 SELECT * from moz_cookies WHERE host = ? ORDER BY path""",
                             (domain,))
-        cookies = [self._cookie_from_row(row) for row in query.fetchmany()]
+        cookies = [self._cookie_from_row(row) for row in query.fetchall()]
         last_path = None
         r = []
         for cookie in cookies:

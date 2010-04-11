@@ -2,11 +2,10 @@
 
 The seek_wrapper code is not used if you're using UserAgent with
 .set_seekable_responses(False), or if you're using the urllib2-level interface
-without SeekableProcessor or HTTPEquivProcessor.  Class closeable_response is
-instantiated by some handlers (AbstractHTTPHandler), but the closeable_response
-interface is only depended upon by Browser-level code.  Function
-upgrade_response is only used if you're using Browser or
-ResponseUpgradeProcessor.
+HTTPEquivProcessor.  Class closeable_response is instantiated by some handlers
+(AbstractHTTPHandler), but the closeable_response interface is only depended
+upon by Browser-level code.  Function upgrade_response is only used if you're
+using Browser.
 
 
 Copyright 2006 John J. Lee <jjl@pobox.com>
@@ -17,9 +16,8 @@ included with the distribution).
 
 """
 
-import copy, mimetools
+import copy, mimetools, urllib2
 from cStringIO import StringIO
-import urllib2
 
 
 def len_of_seekable(file_):
@@ -471,7 +469,7 @@ def seek_wrapped_response(response):
 
     Accepts responses from both mechanize and urllib2 handlers.
 
-    Copes with both oridinary response instances and HTTPError instances (which
+    Copes with both ordinary response instances and HTTPError instances (which
     can't be simply wrapped due to the requirement of preserving the exception
     base class).
     """

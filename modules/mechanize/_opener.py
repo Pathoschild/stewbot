@@ -1,5 +1,4 @@
-"""Integration with Python standard library module urllib2: OpenerDirector
-class.
+"""URL opener.
 
 Copyright 2004-2006 John J Lee <jjl@pobox.com>
 
@@ -20,14 +19,14 @@ except NameError:
     import sets
     set = sets.Set
 
-import _file
-import _http
 from _request import Request
 import _response
 import _rfc3986
 import _sockettimeout
-import _upgrade
+import _urllib2_fork
 from _util import isstringlike
+
+open_file = open
 
 
 class ContentTooShortError(urllib2.URLError):
@@ -45,9 +44,9 @@ def set_request_attr(req, name, value, default):
         setattr(req, name, value)
 
 
-class OpenerDirector(urllib2.OpenerDirector):
+class OpenerDirector(_urllib2_fork.OpenerDirector):
     def __init__(self):
-        urllib2.OpenerDirector.__init__(self)
+        _urllib2_fork.OpenerDirector.__init__(self)
         # really none of these are (sanely) public -- the lack of initial
         # underscore on some is just due to following urllib2
         self.process_response = {}
@@ -58,6 +57,10 @@ class OpenerDirector(urllib2.OpenerDirector):
         self._tempfiles = []
 
     def add_handler(self, handler):
+        if not hasattr(handler, "add_parent"):
+            raise TypeError("expected BaseHandler instance, got %r" %
+                            type(handler))
+
         if handler in self.handlers:
             return
         # XXX why does self.handlers need to be sorted?
@@ -154,7 +157,7 @@ class OpenerDirector(urllib2.OpenerDirector):
         if isstringlike(url_or_req):
             req = Request(url_or_req, data, visit=visit, timeout=timeout)
         else:
-            # already a urllib2.Request or mechanize.Request instance
+            # already a mechanize.Request instance
             req = url_or_req
             if data is not None:
                 req.add_data(data)
@@ -186,8 +189,7 @@ class OpenerDirector(urllib2.OpenerDirector):
 
         # In Python >= 2.4, .open() supports processors already, so we must
         # call ._open() instead.
-        urlopen = getattr(urllib2.OpenerDirector, "_open",
-                          urllib2.OpenerDirector.open)
+        urlopen = _urllib2_fork.OpenerDirector._open
         response = urlopen(self, req, data)
 
         # post-process response
@@ -226,7 +228,8 @@ class OpenerDirector(urllib2.OpenerDirector):
 
     BLOCK_SIZE = 1024*8
     def retrieve(self, fullurl, filename=None, reporthook=None, data=None,
-                 timeout=_sockettimeout._GLOBAL_DEFAULT_TIMEOUT):
+                 timeout=_sockettimeout._GLOBAL_DEFAULT_TIMEOUT,
+                 open=open_file):
         """Returns (filename, headers).
 
         For remote objects, the default filename will refer to a temporary
@@ -245,43 +248,44 @@ class OpenerDirector(urllib2.OpenerDirector):
         req = self._request(fullurl, data, False, timeout)
         scheme = req.get_type()
         fp = self.open(req)
-        headers = fp.info()
-        if filename is None and scheme == 'file':
-            # XXX req.get_selector() seems broken here, return None,
-            #   pending sanity :-/
-            return None, headers
-            #return urllib.url2pathname(req.get_selector()), headers
-        if filename:
-            tfp = open(filename, 'wb')
-        else:
-            path = _rfc3986.urlsplit(req.get_full_url())[2]
-            suffix = os.path.splitext(path)[1]
-            fd, filename = tempfile.mkstemp(suffix)
-            self._tempfiles.append(filename)
-            tfp = os.fdopen(fd, 'wb')
-
-        result = filename, headers
-        bs = self.BLOCK_SIZE
-        size = -1
-        read = 0
-        blocknum = 0
-        if reporthook:
-            if "content-length" in headers:
-                size = int(headers["Content-Length"])
-            reporthook(blocknum, bs, size)
-        while 1:
-            block = fp.read(bs)
-            if block == "":
-                break
-            read += len(block)
-            tfp.write(block)
-            blocknum += 1
-            if reporthook:
-                reporthook(blocknum, bs, size)
-        fp.close()
-        tfp.close()
-        del fp
-        del tfp
+        try:
+            headers = fp.info()
+            if filename is None and scheme == 'file':
+                # XXX req.get_selector() seems broken here, return None,
+                #   pending sanity :-/
+                return None, headers
+                #return urllib.url2pathname(req.get_selector()), headers
+            if filename:
+                tfp = open(filename, 'wb')
+            else:
+                path = _rfc3986.urlsplit(req.get_full_url())[2]
+                suffix = os.path.splitext(path)[1]
+                fd, filename = tempfile.mkstemp(suffix)
+                self._tempfiles.append(filename)
+                tfp = os.fdopen(fd, 'wb')
+            try:
+                result = filename, headers
+                bs = self.BLOCK_SIZE
+                size = -1
+                read = 0
+                blocknum = 0
+                if reporthook:
+                    if "content-length" in headers:
+                        size = int(headers["Content-Length"])
+                    reporthook(blocknum, bs, size)
+                while 1:
+                    block = fp.read(bs)
+                    if block == "":
+                        break
+                    read += len(block)
+                    tfp.write(block)
+                    blocknum += 1
+                    if reporthook:
+                        reporthook(blocknum, bs, size)
+            finally:
+                tfp.close()
+        finally:
+            fp.close()
 
         # raise exception if actual size does not match content-length header
         if size >= 0 and read < size:
@@ -294,7 +298,7 @@ class OpenerDirector(urllib2.OpenerDirector):
         return result
 
     def close(self):
-        urllib2.OpenerDirector.close(self)
+        _urllib2_fork.OpenerDirector.close(self)
 
         # make it very obvious this object is no longer supposed to be used
         self.open = self.error = self.retrieve = self.add_handler = None
@@ -345,25 +349,28 @@ class SeekableResponseOpener(ResponseProcessingOpener):
         return _response.seek_wrapped_response(response)
 
 
+def isclass(obj):
+    return isinstance(obj, (types.ClassType, type))
+
+
 class OpenerFactory:
     """This class's interface is quite likely to change."""
 
     default_classes = [
         # handlers
-        urllib2.ProxyHandler,
-        urllib2.UnknownHandler,
-        _http.HTTPHandler,  # derived from new AbstractHTTPHandler
-        _http.HTTPDefaultErrorHandler,
-        _http.HTTPRedirectHandler,  # bugfixed
-        urllib2.FTPHandler,
-        _file.FileHandler,
+        _urllib2_fork.ProxyHandler,
+        _urllib2_fork.UnknownHandler,
+        _urllib2_fork.HTTPHandler,
+        _urllib2_fork.HTTPDefaultErrorHandler,
+        _urllib2_fork.HTTPRedirectHandler,
+        _urllib2_fork.FTPHandler,
+        _urllib2_fork.FileHandler,
         # processors
-        _upgrade.HTTPRequestUpgradeProcessor,
-        _http.HTTPCookieProcessor,
-        _http.HTTPErrorProcessor,
+        _urllib2_fork.HTTPCookieProcessor,
+        _urllib2_fork.HTTPErrorProcessor,
         ]
     if hasattr(httplib, 'HTTPS'):
-        default_classes.append(_http.HTTPSHandler)
+        default_classes.append(_urllib2_fork.HTTPSHandler)
     handlers = []
     replacement_handlers = []
 
@@ -382,22 +389,21 @@ class OpenerFactory:
         """
         opener = self.klass()
         default_classes = list(self.default_classes)
-        skip = []
+        skip = set()
         for klass in default_classes:
             for check in handlers:
-                if type(check) == types.ClassType:
+                if isclass(check):
                     if issubclass(check, klass):
-                        skip.append(klass)
-                elif type(check) == types.InstanceType:
-                    if isinstance(check, klass):
-                        skip.append(klass)
+                        skip.add(klass)
+                elif isinstance(check, klass):
+                    skip.add(klass)
         for klass in skip:
             default_classes.remove(klass)
 
         for klass in default_classes:
             opener.add_handler(klass())
         for h in handlers:
-            if type(h) == types.ClassType:
+            if isclass(h):
                 h = h()
             opener.add_handler(h)
 
