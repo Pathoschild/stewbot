@@ -21,12 +21,12 @@ from Stewardbot import Stewardbot
 ## Launch bot
 ###################
 bot = Stewardbot(
-	server           = config['irc']['server'],
-	port             = config['irc']['port'],
-	nick             = config['irc']['nick'],
-	user             = config['irc']['user'],
-	password         = config['irc']['pass'],
-	channels         = config['irc']['chans'],
-	ssl              = config['irc']['ssl']
+	server           = config.irc.server,
+	port             = config.irc.port,
+	nick             = config.irc.nick,
+	user             = config.irc.user,
+	password         = config.irc.password,
+	channels         = config.irc.chans,
+	ssl              = config.irc.ssl
 )
 bot.processForever()

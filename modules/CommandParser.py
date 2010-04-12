@@ -70,9 +70,9 @@ class CommandParser( BaseClass ):
 		}
 
 		# input
-		self.command_groups    = copy.copy( commands )
+		self.command_groups    = commands
 		self.callback          = callback
-		self.user_groups       = copy.copy( users )
+		self.user_groups       = users
 		self.banned_users      = banned
 		self.handle_commit     = handle_commit
 		self.no_commit         = no_commit_commands

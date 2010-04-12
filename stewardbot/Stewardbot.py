@@ -9,7 +9,7 @@ import sys
 
 sys.path.append('./')
 sys.path.append('../modules')
-from __config__ import config, documentation, _INDEX_USERS, _INDEX_OPERATORS
+from __config__ import config, documentation, ACCESS_WHITELISTED, ACCESS_OPERATOR
 from Bash       import Bash       # !bash - random quotes
 from Wikimedia  import Browser    # web interface, listing wikis, handling prefixes, etc
 from BaseClass  import BaseClass
@@ -26,30 +26,30 @@ class Stewardbot( BaseClass ):
 	##	Initializes properties & settings, instantiates required classes.
 	#############################################################################################################
 	def __init__( self, server, port, nick, user, password, channels, ssl ):
-		BaseClass.__init__( self, config['debug']['verbose'] )
+		BaseClass.__init__( self, config.debug.verbose )
 		self.__name__ = 'Stewardbot'
 		self.trace()
 
 		#############
 		## Commands
 		#############
-		self.irc_commands = config['irc']['commands']
-
+		self.irc_commands = config.irc.commands
+		
 		#############
 		## Configuration
 		#############
 		# default runtime config
 		self.options = {
-			'confirm_all':config['irc']['confirm_all']
+			'confirm_all':config.irc.confirm_all
 		}
 
 		self.irc_commands_help = documentation
 
 		# irc users
-		self.users = config['irc']['wiki_names_by_level']
-		self.wiki_names = config['irc']['wiki_names']
-		self.INDEX_USERS = _INDEX_USERS;
-		self.INDEX_OPERATORS = _INDEX_OPERATORS;
+		self.users = config.irc.wiki_names_by_level
+		self.wiki_names = config.irc.wiki_names
+		self.INDEX_USERS = ACCESS_WHITELISTED;
+		self.INDEX_OPERATORS = ACCESS_OPERATOR;
 
 		#############
 		## Classes
@@ -58,21 +58,21 @@ class Stewardbot( BaseClass ):
 		self.bash = Bash()
 
 		self.parser = CommandParser(
-			commands       = config['irc']['commands_by_level'],
+			commands       = config.irc.commands_by_level,
 			callback       = self,
-			users          = config['irc']['users_by_level'],
-			banned         = config['irc']['ignore_masks'],
-			command_prefix = config['irc']['command_prefix'],
-			command_delimiter = config['irc']['command_delimiter'],
-			no_commit_commands = config['irc']['commands_nocommit']
+			users          = config.irc.users_by_level,
+			banned         = config.irc.ignore_masks,
+			command_prefix = config.irc.command_prefix,
+			command_delimiter = config.irc.command_delimiter,
+			no_commit_commands = config.irc.commands_nocommit
 		)
 
 		self.browser = Browser(
-			username      = config['web']['user'],
-			password      = config['web']['pass'],
-			user_agent    = config['web']['user_agent'],
-			max_api_items = config['web']['max_api_items'],
-			default_base_url = config['web']['default_base_url']
+			username      = config.web.user,
+			password      = config.web.password,
+			user_agent    = config.web.user_agent,
+			max_api_items = config.web.max_api_items,
+			default_base_url = config.web.default_base_url
 		)
 		self.browser.login()
 
@@ -84,7 +84,7 @@ class Stewardbot( BaseClass ):
 			password = password,
 			chans    = channels,
 			ssl      = ssl,
-			default_quit_reason = config['irc']['quit_reason'],
+			default_quit_reason = config.irc.quit_reason,
 			callback_pubmsg     = self.onPublicMessage
 		)
 		self.connect()
@@ -165,17 +165,17 @@ class Stewardbot( BaseClass ):
 		except:
 			## notify IRC users
 			irc_text = 'unhandled exception: %s (see terminal)' % self.formatException()
-			if config['debug']['dump_exceptions']:
-				dump_url = config['debug']['dump_url']
+			if config.debug.dump_file != None:
+				dump_url = config.debug.dump_url
 				if not dump_url:
-					dump_url = config['debug']['dump_file']
+					dump_url = config.debug.dump_file
 				irc_text += '. Dumping data to < %s >' % dump_url
 			self.sendMessage( data.channel, None, irc_text )
 			
 			## dump data
-			if config['debug']['dump_exceptions']:
+			if config.debug.dump_file != None:
 				try:
-					dump = open( config['debug']['dump_file'], 'w' )
+					dump = open( config.debug.dump_file, 'w' )
 					dump.write( self.formatFullException() )
 					dump.write( '\n\nLast page loaded: %s\n' % self.browser.last_url )
 					dump.write( self.unparse(self.browser.text) )
@@ -348,7 +348,7 @@ class Stewardbot( BaseClass ):
 		# prepare reason
 		if len(args) <= REASON:
 			if lock or hide:
-				args.append( config['web']['default_ca_reason'] )
+				args.append( config.web.default_ca_reason )
 			else:
 				args.append('')
 
@@ -747,7 +747,7 @@ class Stewardbot( BaseClass ):
 		# validate args
 		if self.syntaxError( data, count=[2,3] ):
 			return
-		if self.syntaxError( data, 'invalid wikiset id', condition = self.isInt(args[ID]) and int(args[ID]) in config['web']['wikiset_ids'].keys() ):
+		if self.syntaxError( data, 'invalid wikiset id', condition = self.isInt(args[ID]) and int(args[ID]) in config.web.wikiset_ids.keys() ):
 			return
 
 		# prepare reason
