@@ -59,13 +59,11 @@ class StrictDict( dict ):
 	###################
 	## Consume a dictionary
 	###################
-	def consumeDict( self, obj, failQuietly = False ):
+	def consumeDict( self, obj ):
 		items = self._getItemsOrFalse(obj)
 		
 		## not a dict!
 		if items == False:
-			if failQuietly:
-				return False
 			raise TypeError, 'StrictDict cannot consume a non-dictionary object'
 		
 		## consume
@@ -88,17 +86,18 @@ class StrictDict( dict ):
 	## Return dict equivalent of self
 	###################
 	def toDict( self ):
-		return _toDict( {}, self )
+		return self._toDict( self )
 	
-	def _toDict( self, newDict, oldDict ):
-		items = oldDict.items()
+	def _toDict( self, oldDict ):
+		items = self._getItemsOrFalse( oldDict )
 
 		## not a dict, return as-is
 		if items == False:
-			return newDict
+			return oldDict
 	
 		## dict, convert
 		else:
-			for (k,v) in oldDict.items():
-				newDict[k] = {}
-				return self._toDict( newDict[k], v )
+			newDict = {}
+			for (k,v) in items:
+				newDict[k] = self._toDict( v )
+			return newDict
