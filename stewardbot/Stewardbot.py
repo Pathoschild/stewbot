@@ -269,7 +269,7 @@ class Stewardbot( BaseClass ):
 			self.respond( data, 'there are no queued commands with the given commit ids' )
 			return
 		if len(not_queued) > 0:
-			self.respond( data, 'skipped non-queued commands [%s]' % ', '.join(not_queued) )
+			self.respond( data, 'skipped non-queued commands [%s]' % ', '.join([str(v) for v in not_queued]) )
 
 		# process each id
 		for id in ids:
