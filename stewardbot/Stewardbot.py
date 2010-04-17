@@ -955,17 +955,18 @@ class Stewardbot( BaseClass ):
 
 				# fetch edit counts
 				counts = self.browser.countUserEdits( user )
-				(edits, top_edits, new_pages) = (counts['edits'], counts['top'], counts['new'])
+				(edits, top_edits, new_pages, unreverted) = (counts['edits'], counts['top'], counts['new'], counts['unreverted'])
 
 				# raise warning if top/new edits
-				if top_edits or new_pages:
-					notes = '(WARNING: %s unreverted %s detected. < %s >)' % (
-						top_edits + new_pages,
+				if unreverted:
+					notes = '(WARNING: %s unreverted %s detected [total %s]: %s )' % (
+						unreverted,
 						'edits & creations' if top_edits and new_pages else 'edits' if top_edits else 'pages',
+						edits,
 						'%s%s' % (self.browser.getUrl(prefix = wiki), path)
 					)
 				elif edits:
-					notes = '(has edits)'
+					notes = '(%s edits)' % edits
 
 				# set options
 				if not edits and hide:

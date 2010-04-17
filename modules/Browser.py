@@ -675,7 +675,7 @@ class Browser( BaseClass ):
 
 	###################
 	##	Count user's edits
-	##	Returns a hash with total edits, new edits, and top edits.
+	##	Returns a hash with total edits, new edits, top edits, and unreverted (new or top) edits.
 	##	required: setBaseUrl()
 	###################
 	def countUserEdits( self, username ):
@@ -696,17 +696,21 @@ class Browser( BaseClass ):
 		count = len( items )
 		top   = 0
 		new   = 0
+		unreverted = 0
 		for item in items:
-			if item.getAttributeNode( 'top' ):
-				top += 1
-			if item.getAttributeNode( 'new' ):
-				new += 1
+			if item.getAttributeNode( 'top' ) or item.getAttributeNode( 'new' ):
+				unreverted += 1
+				if item.getAttributeNode( 'top' ):
+					top += 1
+				if item.getAttributeNode( 'new' ):
+					new += 1
 
 		# return data
 		return {
 			'edits':count,
 			'new':new,
-			'top':top
+			'top':top,
+			'unreverted':unreverted
 		}
 
 
