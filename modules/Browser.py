@@ -835,7 +835,6 @@ class Browser( BaseClass ):
 	###################
 	##	CentralAuth actions
 	##	required: setBaseUrl() to metawiki
-	##	NOTE: synchronize changes with getCentralAuthStatus!
 	###################
 	def centralAuth( self, user, reason = '', lock = None, hide = None, oversightLocal = None, ignoreUnchanged = False ):
 		self.trace()
@@ -874,6 +873,10 @@ class Browser( BaseClass ):
 		if set_hide != HIDE_IGNORE and set_hide not in [k.name for k in self.browser.find_control(NAME_HIDE).items]:
 			raise self.Error, 'invalid hide constant "%s", valid types are [%s]' % (set_hide, ', '.join([k.name for k in self.browser.find_control(NAME_HIDE).items]))
 		
+		# don't implicitly decrease hide level
+		if set_hide == HIDE_LISTS and self.browser[NAME_HIDE][0] == HIDE_SUPPRESSED:
+			set_hide = HIDE_SUPPRESSED
+		
 		# command is redundant?
 		if set_lock in [LOCK_IGNORE, self.browser[NAME_LOCK][0]] and set_hide in [HIDE_IGNORE, self.browser[NAME_HIDE][0]]:
 			if ignoreUnchanged:
@@ -886,7 +889,7 @@ class Browser( BaseClass ):
 					error += ' and '
 				error += 'hidden' if set_hide == HIDE_LISTS else 'globally oversighted' if set_hide == HIDE_SUPPRESSED else 'unhidden'
 			raise self.Error, error
-		
+				
 		# modify form
 		if set_lock != LOCK_IGNORE:
 			control = self.browser.find_control(NAME_LOCK).get(set_lock).selected = True
@@ -900,19 +903,19 @@ class Browser( BaseClass ):
 	###################
 	##	Get CentralAuth Status
 	##	required: setBaseUrl() to metawiki
-	##	NOTE: synchronize changes with centralAuth!
+	##	TERRIBLE HACKS HERE, be ye warned.
 	###################
 	def getCentralAuthStatus( self, user ):
 		self.trace()
 		self.login()
 
-		# load form
+		# load form (terrible hacks here)
 		self.load( title = 'Special:CentralAuth', parameters = {'target':user}, GET = True, visit = True, parse_as = 'html' )
 		try:
 			self.browser.select_form( predicate = lambda form: 'wpMethod' in [item.name for item in form.controls] and form['wpMethod'] == 'set-status' )
 		except mechanize.FormNotFoundError:
 			raise self.Error, 'could not find set-status form from Special:CentralAuth'
-		
+			
 		# parse status
 		NAME_LOCK = 'wpStatusLocked'
 		NAME_HIDE = 'wpStatusHidden'
