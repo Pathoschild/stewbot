@@ -115,7 +115,7 @@ config = StrictDict({
 		## commands
 		########
 		'commands_by_level':{
-			ACCESS_OPEN:['help', 'activity', 'links', 'lookup', 'scanedits', 'showrights', 'translate', 'bash', 'debug', 'queue'],
+			ACCESS_OPEN:['help', 'activity', 'getblocks', 'links', 'lookup', 'scanedits', 'showrights', 'translate', 'bash', 'debug', 'queue'],
 			ACCESS_WHITELISTED:['config', 'exit', 'reset'],
 			ACCESS_OPERATOR:['block', 'blockhide', 'checkuser', 'delete', 'lock', 'hide', 'lockhide', 'globaloversight', 'unlock', 'unhide', 'gblock', 'gunblock', 'setrights', 'stab', 'stabhide', 'unblock', 'wikiset', 'withlist', 'commit', 'cancel']
 		},
@@ -192,12 +192,13 @@ documentation = {
 	'queue':'view the command queue; syntax is \'!queue\' or \'!queue commit_id\'',
 	
 	# information
+	'activity':'get dates of last edit, local sysop action, and local bureaucrat action on the specified wiki; syntax is \'!activity dbprefix or domain\'',
+	'bash':'say a quote selected from <http://meta.wikimedia.org/wiki/Bash>, <https://bugzilla.wikimedia.org/quips.cgi?action=show>, or IRC; syntax is \'!bash\' (random), \'!bash literal search terms\' (first matching quote), or \'!bash id\' (get quote by queue ID)',
+	'getblocks':'get a list of global and local blocks affecting the user, IP address, or CIDR range (setting a range will find blocks that affect the entire range, not subsets); syntax is \'!getblocks username-or-ip\'',
+	'lookup':'look up information on the language code. Syntax is \'!lookup code\'',
 	'scanedits':'scan a global user\'s local accounts for edits; syntax is \'!scanedits name\'',
 	'showrights':'list the specified user\'s local and global right-groups. Syntax is \'!showrights user\'',
-	'activity':'get dates of last edit, local sysop action, and local bureaucrat action on the specified wiki; syntax is \'!activity dbprefix or domain\'',
-	'lookup':'look up information on the language code. Syntax is \'!lookup code\'',
 	'translate':'translate text from one language to another. Syntax is \'!translate text\' (autodetect to English), \'!translate target_code > text\' (target to English), or \'!translate source_code > target_code > text\'', 
-	'bash':'say a quote selected from <http://meta.wikimedia.org/wiki/Bash>, <https://bugzilla.wikimedia.org/quips.cgi?action=show>, or IRC; syntax is \'!bash\' (random), \'!bash literal search terms\' (first matching quote), or \'!bash id\' (get quote by queue ID)',
 	
 	# centralAuth
 	'lock':'lock a global account; syntax is \'!lock name\' or \'!lock name > reason\'',

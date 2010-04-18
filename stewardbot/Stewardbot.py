@@ -449,6 +449,92 @@ class Stewardbot( BaseClass ):
 
 
 	###################
+	##	!getblocks
+	###################
+	def handle_getblocks( self, data ):
+		self.trace()
+		args = data.args
+		TARGET = 0
+		
+		##########
+		## Initialize & validate
+		##########
+		if self.syntaxError( data, count = 1 ):
+			return
+
+		try:
+			(user, wiki) = self.splitIdentifier( args[TARGET], allowImplicit = True )
+		except self.Error, e:
+			self.respond( data, e )
+			return
+		
+		##########
+		## Fetch global
+		##########
+		out = ''
+		if self.isAddress( user ):
+			out = 'IP address; '
+			
+			# global blocks
+			items = self.browser.getGlobalBlocks(user)
+			if len(items) == 0:
+				out += 'no global blocks'
+			else:
+				gblocks = []
+				for block in items:
+					target = block['address']
+					expiry = block['expiry'][:-4].replace('T', ' ')
+					gblocks.append( '%s until %s' % (target, expiry) )
+				out += 'affected by global blocks: [%s]' % ', '.join(gblocks)
+		
+		else:
+			# global account status
+			try:
+				status = self.browser.getCentralAuthStatus( user )
+				out = 'Global account; '
+				
+				if status['locked'] or status['hidden'] or status['oversighted']:
+					if status['locked']:
+						out += 'locked'
+						if status['hidden'] or status['oversighted']:
+							out += ' and '
+					if status['hidden']:
+						out += 'hidden'
+					elif status['oversighted']:
+						out += 'oversighted'
+				else:
+					out += 'no global restrictions'
+							
+			except self.Error:
+				out = 'Not a global account'
+			
+		##########
+		## Fetch local blocks
+		##########
+		try:
+			self.handleAt( wiki )
+			items = self.browser.getBlockStatus( user )
+			if len(items) == 0:
+				out += '; no blocks on %s' % wiki
+			else:
+				blocks = []
+				for block in items:
+					target = block['user']
+					expiry = block['expiry'][:-4].replace('T', ' ')
+					blocks.append( '%s until %s' % (target, expiry) )
+				out += '; blocked on %s: [%s]' % (wiki, ', '.join(blocks))
+		except self.Error, e:
+			self.respond( data, e )
+		finally:
+			self.unhandleAt()
+		
+		##########
+		## Send response
+		##########
+		self.respond( data, out )
+
+	
+	###################
 	##	!gblock
 	###################
 	def handle_gblock( self, data ):
@@ -1247,6 +1333,7 @@ class Stewardbot( BaseClass ):
 		self.trace()
 
 		# user
+		identifier = self.capitalizeFirstLetter(identifier)
 		if identifier.find('@') == -1:
 			if allowImplicit:
 				return (identifier, 'metawiki')
@@ -1270,7 +1357,7 @@ class Stewardbot( BaseClass ):
 		self.trace()
 
 		# name@identifier
-		(user, wiki) = self.splitIdentifier( self.capitalizeFirstLetter(identifier), allowImplicit = allowImplicit )
+		(user, wiki) = self.splitIdentifier( identifier, allowImplicit = allowImplicit )
 		if wiki == 'global':
 			if allowGlobal:
 				if getUsername:

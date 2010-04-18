@@ -529,19 +529,29 @@ class Browser( BaseClass ):
 	###################
 	def getBlockStatus( self, user ):
 		self.trace()
-
-		self.queryApi({
-			'action':'query',
-			'list':'blocks',
-			'bkusers':user,
-			'bklimit':1
-		})
-
-		block = self.parsed.getElementsByTagName('block')
-		if block:
-			block = block[0]
-			return {
+		
+		# fetch data
+		if self.isAddress( user ):
+			self.queryApi({
+				'action':'query',
+				'list':'blocks',
+				'bkip':user
+			})			
+		
+		else:
+			self.queryApi({
+				'action':'query',
+				'list':'blocks',
+				'bkusers':user,
+				'bklimit':1
+			})
+	
+		# parse
+		blocks = []
+		for block in self.parsed.getElementsByTagName('block'):
+			blocks.append({
 				'id':block.getAttribute('id'),
+				'user':block.getAttribute('user'),
 				'by':block.getAttribute('by'),
 				'timestamp':block.getAttribute('timestamp'),
 				'expiry':block.getAttribute('expiry'),
@@ -551,9 +561,35 @@ class Browser( BaseClass ):
 				'noemail':block.hasAttribute('noemail'),
 				'allowusertalk':block.hasAttribute('allowusertalk'),
 				'hidden':block.hasAttribute('hidden')
-			}
-		else:
-			return False
+			})		
+		return blocks
+		
+	
+	###################
+	##	Get global blocks affecting an IP
+	##	required: setBaseUrl() to metawiki
+	###################
+	def getGlobalBlocks( self, address ):
+		self.trace()
+		
+		self.queryApi({
+			'action':'query',
+			'list':'globalblocks',
+			'bgip':address
+		})
+		blocks = []
+		for item in self.parsed.getElementsByTagName( 'block' ):
+			blocks.append({
+				'id':item.getAttribute('id'),
+				'address':item.getAttribute('address'),
+				'anononly':item.hasAttribute('anononly'),
+				'by':item.getAttribute('by'),
+				'bywiki':item.getAttribute('bywiki'),
+				'timestamp':item.getAttribute('timestamp'),
+				'expiry':item.getAttribute('expiry'),
+				'reason':item.getAttribute('reason')
+			})
+		return blocks
 
 
 	###################
@@ -568,9 +604,11 @@ class Browser( BaseClass ):
 
 		# cancel if no need
 		if reblockIfChanged:
-			block = self.getBlockStatus( user )
-			if block and block['hidden'] == bool(hidename) and (block['expiry'] == expiry or (block['expiry'] == 'infinity' and expiry == 'never')):
-				return False
+			blocks = self.getBlockStatus( user )
+			if len(blocks) > 0:
+				block = blocks[0]
+				if block['hidden'] == bool(hidename) and (block['expiry'] == expiry or (block['expiry'] == 'infinity' and expiry == 'never')):
+					return False
 
 		# build query
 		query = {
@@ -797,6 +835,7 @@ class Browser( BaseClass ):
 	###################
 	##	CentralAuth actions
 	##	required: setBaseUrl() to metawiki
+	##	NOTE: synchronize changes with getCentralAuthStatus!
 	###################
 	def centralAuth( self, user, reason = '', lock = None, hide = None, oversightLocal = None, ignoreUnchanged = False ):
 		self.trace()
@@ -858,7 +897,47 @@ class Browser( BaseClass ):
 		self.submit()
 		return True
 
+	###################
+	##	Get CentralAuth Status
+	##	required: setBaseUrl() to metawiki
+	##	NOTE: synchronize changes with centralAuth!
+	###################
+	def getCentralAuthStatus( self, user ):
+		self.trace()
+		self.login()
 
+		# load form
+		self.load( title = 'Special:CentralAuth', parameters = {'target':user}, GET = True, visit = True, parse_as = 'html' )
+		try:
+			self.browser.select_form( predicate = lambda form: 'wpMethod' in [item.name for item in form.controls] and form['wpMethod'] == 'set-status' )
+		except mechanize.FormNotFoundError:
+			raise self.Error, 'could not find set-status form from Special:CentralAuth'
+		
+		# parse status
+		NAME_LOCK = 'wpStatusLocked'
+		NAME_HIDE = 'wpStatusHidden'
+		LOCK_NO     = "0"
+		LOCK_YES    = "1"
+		HIDE_NO     = ""
+		HIDE_IGNORE = None
+		HIDE_LISTS  = "lists"
+		HIDE_SUPPRESSED = "suppressed"
+		
+		is_locked = self.browser[NAME_LOCK][0]
+		is_locked = True if (is_locked == LOCK_YES) else False
+		
+		is_hidden = self.browser[NAME_HIDE][0]
+		is_hidden = True if (is_hidden in [HIDE_LISTS, HIDE_SUPPRESSED]) else False
+		
+		is_suppressed = True if (is_hidden == HIDE_SUPPRESSED) else False
+		
+		# return result
+		return {
+			'locked':is_locked,
+			'hidden':is_hidden,
+			'oversighted':is_suppressed
+		}
+		
 	###################
 	##	Get global rights
 	###################
@@ -878,14 +957,9 @@ class Browser( BaseClass ):
 		self.login()
 
 		# find current blocks affecting this IP
-		self.queryApi({
-			'action':'query',
-			'list':'globalblocks',
-			'bgip':address
-		})
 		blocks = []
-		for item in self.parsed.getElementsByTagName( 'block' ):
-			blocks.append( item.getAttribute('address') )
+		for block in self.getGlobalBlocks( address ):
+			blocks.append( block['address'] )
 		count = len( blocks )
 		if count:
 			blocks_str = blocks[0] if count==1 else '[%s]' % ', '.join( blocks )
