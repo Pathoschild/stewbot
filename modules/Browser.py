@@ -609,6 +609,7 @@ class Browser( BaseClass ):
 				block = blocks[0]
 				if block['hidden'] == bool(hidename) and (block['expiry'] == expiry or (block['expiry'] == 'infinity' and expiry == 'never')):
 					return False
+				reblock = True
 
 		# build query
 		query = {
