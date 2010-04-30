@@ -112,6 +112,15 @@ class Bash( BaseClass ):
 			'Hmph. Not fair!'
 		]
 		self.chloe_old = []
+		
+		self.exit_new = [
+			'Laaaaze. :D',
+			'Wai so srs? ._.',
+			':(',
+			'I\'ll remember this.',
+			'Acknowledged. Safely putting away knives... done.',
+			'So flee youthful passions and pursue righteousness, faith, love, and peace, along with those who call on the Operator from a pure heart.'
+		]
 
 
 	###########################################################################
@@ -191,6 +200,16 @@ class Bash( BaseClass ):
 
 		# return value
 		return quote
+
+	###################
+	##	Return random exit message
+	###################
+	def exitMessage( self ):
+		self.trace()
+		
+		i = random.randint( 0, len(self.exit_new) - 1 )
+		return self.exit_new[i]
+
 
 	###################
 	##	Return string with given probability, else random quote

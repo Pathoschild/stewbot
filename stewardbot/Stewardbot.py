@@ -297,7 +297,7 @@ class Stewardbot( BaseClass ):
 		self.reset( data.args[0] if len(data.args) else None )
 
 	def handle_exit( self, data ):
-		self.sendMessage( data.channel, None, 'Laaaaze. :D' )
+		self.sendMessage( data.channel, None, self.bash.exitMessage() )
 		self.disconnect( data.args[0] if len(data.args) else None )
 
 
