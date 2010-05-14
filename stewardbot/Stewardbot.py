@@ -378,6 +378,9 @@ class Stewardbot( BaseClass ):
 		# validate args
 		if self.syntaxError( data, 'invalid argument count', count=1 ):
 			return
+		if args[WIKI] == 'enwiki':
+			self.respond( data, 'last edit, sysop action, bureaucrat action, and checkuser edit: liek two seconds ago' )
+			return
 
 		# query stewardry API
 		try:
