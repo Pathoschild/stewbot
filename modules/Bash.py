@@ -27,6 +27,7 @@ class Bash( BaseClass ):
 			# direct quotes
 			'<Pathoschild> You can do tabs in Python, but you can\'t mix tab and space indenting.   * Mike_lifeguard weeps   <Mike_lifeguard> why did nobody tell me?',
 			'<Prodego> Razorflame: btw, there are no quotes of me because I am a non-funny person',
+			' <DerHexer> where have all the stewbots gone | long time passing | where have all the stewbots gone | long time ago | where have all the stewbots gone | *poof* picked them everyone | when will he ever come back | when will he ever come back',
 
 			# <http://meta.wikimedia.org/wiki/Bash>
 			'<Werdna> When all is said and done on Wikipedia, a hell of a lot more is said than done.',
