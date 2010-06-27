@@ -94,13 +94,15 @@ config = StrictDict({
 				'wikimedia/Kylu':'Kylu',
 				'wikimedia/Maximillion-Pegasus':'Maximillion Pegasus',
 				'wikimedia/MuZemike':'Muzemike',
+				'wikimedia/nifky':'Nifky?',
 				'wikimedia/Juliancolton':'Juliancolton',
 				'wikipedia/NuclearWarfare':'NuclearWarfare',
 				'wikimedia/pmlineditor':'Pmlineditor',
 				'wikipedia/Prodego':'Prodego',
 				'wiktionary/Razorflame':'Razorflame',
 				'wikipedia/The-Thing-That-Should-Not-Be':'The Thing That Should Not Be',
-				'wikipedia/Tiptoety':'Tiptoety'
+				'wikipedia/Tiptoety':'Tiptoety',
+				'firefox/community/pilif12p':'Pilif12p'
 			},
 			# operators (full access)
 			ACCESS_OPERATOR:{
