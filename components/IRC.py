@@ -1,21 +1,16 @@
 # -*- coding: utf-8  -*-
-#######################################################
-##	IRC
-##	Abstracts interacting with an IRC server.
-#######################################################
 import sys
-sys.path.append( './modules' )
-
-import copy                    # copying Message instances
-import irclib                  # communicating with the IRC server
-from time import time, sleep  # throttling
+import time  # throttling
+import copy                   # copying Message instances
+import irclib                 # communicating with the IRC server
 
 from BaseClass import BaseClass
 
-###################
-## IRC client class
-###################
 class IRC( BaseClass ):
+	"""
+	Class responsible for interacting with an IRC server.
+	"""
+	
 	###########################################################################
 	##	Initialize
 	###########################################################################
@@ -36,9 +31,10 @@ class IRC( BaseClass ):
 		default_reset_reason = 'reset',
 		max_message_size = 420,
 		callback_pubmsg = None,
-		throttle_seconds = 1.6
+		throttle_seconds = 1.6,
+		logger = None
 	):
-		BaseClass.__init__( self )
+		BaseClass.__init__( self, logger = logger )
 		self.trace()
 
 		# data
@@ -59,9 +55,9 @@ class IRC( BaseClass ):
 		self.throttle             = throttle_seconds
 
 		# throttled message queuing
-		self.queue     = []        # list of messages to send
-		self.next_send = time()    # minimum epoch time when next message can be sent
-		self.last_size = 0         # size of last message sent (used to increase wait time for long messages)
+		self.queue     = []          # list of messages to send
+		self.next_send = time.time() # minimum epoch time when next message can be sent
+		self.last_size = 0           # size of last message sent (used to increase wait time for long messages)
 
 		# IRC backend
 		self.irc = irclib.IRC()
@@ -170,12 +166,11 @@ class IRC( BaseClass ):
 		# split message along max size & queue
 		lines = [message[i:i+self.max_message_size] for i in range( 0, len(message), self.max_message_size )]
 		for line in lines:
-			print '\n###############'
-			print line
+			self.traceMessage('send: ' + line)
 			self.queue.append( [target, line] )
 
 		# reset last size if past delay
-		if time() >= self.next_send:
+		if time.time() >= self.next_send:
 			self.last_size = 0
 
 		# send messages in queue
@@ -184,20 +179,20 @@ class IRC( BaseClass ):
 			(target, line) = self.queue.pop( 0 )
 
 			# delay post if over the limit
-			if time() < self.next_send:
+			if time.time() < self.next_send:
 				# wait until throttle expires
-				sleep( self.next_send - time() )
+				time.sleep( self.next_send - time.time() )
 
 				# extend wait if last message was particularly large
 				if self.last_size > (0.5 * self.max_message_size):
-					sleep( self.throttle )
+					time.sleep( self.throttle )
 				if self.last_size > (0.9 * self.max_message_size):
-					sleep( self.throttle )
+					time.sleep( self.throttle )
 
 			# send message
 			self.server.privmsg( target, self.unparse(line) )
 			self.last_size = len(line)
-			self.next_send = time() + self.throttle
+			self.next_send = time.time() + self.throttle
 
 
 	###################

@@ -38,8 +38,8 @@ class Documentation( BaseClass ):
 	##	Constructor
 	##	Internally store response tree.
 	#############################################################################################################
-	def __init__( self, tree, default = None ):
-		BaseClass.__init__( self )
+	def __init__( self, tree, logger, default = None ):
+		BaseClass.__init__( self, logger = logger )
 		self.trace()
 		self.tree    = copy.copy( tree )
 		self.default = default

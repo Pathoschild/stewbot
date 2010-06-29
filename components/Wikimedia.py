@@ -7,9 +7,7 @@
 import os
 import pickle
 import re
-import sys
 import time
-sys.path.append( './modules' )
 from Browser import Browser as BaseBrowser
 
 class Browser( BaseBrowser ):
@@ -17,8 +15,8 @@ class Browser( BaseBrowser ):
 	##	Constructor
 	##	Build lists of wikis
 	###########################################################################
-	def __init__( self, username, password, user_agent = 'stewbot framework', default_base_url = 'http://meta.wikimedia.org', default_index_path = '/w/index.php', default_api_path = '/w/api.php', obey_robot_rules = False, max_api_items = 200, wiki_cache = 'Wikimedia.cache', max_cache_age = 14 * 24 * 60 * 60, load_wikis = True, verbose = True ):
-		BaseBrowser.__init__( self, username, password, user_agent, obey_robot_rules, max_api_items, verbose = verbose )
+	def __init__( self, username, password, user_agent = 'stewbot framework', default_base_url = 'http://meta.wikimedia.org', default_index_path = '/w/index.php', default_api_path = '/w/api.php', obey_robot_rules = False, max_api_items = 200, wiki_cache = os.path.dirname(__file__) + '/Wikimedia.cache', max_cache_age = 14 * 24 * 60 * 60, load_wikis = True, logger = None ):
+		BaseBrowser.__init__( self, username, password, user_agent, obey_robot_rules, max_api_items, logger = logger )
 		self.trace()
 		self.setBaseUrl( default_base_url, default_index_path, default_api_path, set_default = True )
 
@@ -35,7 +33,7 @@ class Browser( BaseBrowser ):
 		# load wikis
 		if load_wikis:
 			self.loadWikis()
-			print self.families
+			logger.Log(self.families)
 
 
 	###########################################################################

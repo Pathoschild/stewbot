@@ -14,21 +14,26 @@
 ##		isAddress( text<str> )<bool>
 ##			returns boolean: text is an IP address?
 #######################################################
-import sys
 import re     # re, match
+import sys
 import urllib # urlencode
 import inspect
 import traceback
 import chardet
+from components.Interface import Interface
+from components.logging.ILogger import ILogger
+from components.logging.SilentLogger import SilentLogger
 
 class BaseClass( object ):
 	###########################################################################
 	##	Constructor
 	##	Initialize properties.
 	###########################################################################
-	def __init__( self, verbose = True ):
-		self.verbose    = verbose
+	def __init__( self, logger ):
+		self.logger = logger
 		self.re_address = re.compile( '^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:/(?:1[6-9]|2[0-9]|3[0-2]))?$' )
+		
+		Interface.Assert(logger, ILogger)
 
 
 	###########################################################################
@@ -67,7 +72,7 @@ class BaseClass( object ):
 	##	If VERBOSE, print function call to console.
 	###################
 	def trace( self, overrides=None ):
-		if self.verbose:
+		if not isinstance(self.logger, SilentLogger): # avoid pointless computing
 			try:
 				# get frame
 				frame  = inspect.stack()[1][0]
@@ -98,9 +103,7 @@ class BaseClass( object ):
 				)
 
 				# trace
-				trace = '%s::%s%s' % (module, function, arg_string)
-				if self.verbose:
-					print trace
+				self.logger.Log('%s::%s%s' % (module, function, arg_string))
 			finally:
 				del frame
 
@@ -110,8 +113,7 @@ class BaseClass( object ):
 	##	If VERBOSE, print message to console.
 	###################
 	def traceMessage( self, msg ):
-		if self.verbose:
-			print msg
+		self.logger.Log(msg)
 
 
 	###################
@@ -131,7 +133,7 @@ class BaseClass( object ):
 		tb_last = traceback.format_exc().splitlines()
 		tb_last = tb_last[len(tb_last)-3] # get 3rd line from bottom (last detail before error, code)
 
-		print self.formatFullException()
+		self.logger.Log(self.formatFullException())
 		return "%s: %s. %s" % (type.__name__, str(value), str(tb_last))
 
 	def formatFullException( self ):
@@ -187,21 +189,21 @@ class BaseClass( object ):
 			########
 			# Try encoding detection algorithm
 			########
-			print '	>> try encoding detection... ',
+			self.logger.Log('	>> unable to resolve text encoding, trying heuristic detection... ')
 			try:
 				detector = chardet.detect( obj )
-				print '%s (%s confidence)... ' % ( detector['encoding'], detector['confidence'] ),
+				self.logger.Log('		%s (%s confidence)... ' % ( detector['encoding'], detector['confidence'] ))
 				string = obj.decode( detector['encoding'] )
-				print 'ok!'
+				self.logger.Log('		ok!')
 				return string
 			except UnicodeDecodeError:
-				print 'failed!'
+				self.logger.Log('		failed!')
 
 			########
 			# Everything failed, try pretending nothing happened
 			########
 			# pretend it's ok?
-			print '	>> try pretending it\'s ok?'
+			self.logger.Log('	>> try pretending it\'s ok?')
 			return obj
 
 		########

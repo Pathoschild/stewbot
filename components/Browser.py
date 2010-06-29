@@ -2,10 +2,6 @@
 ##	Browser
 ##	Abstracts querying and scraping web pages, and parsing APIs.
 #######################################################
-import sys
-sys.path.append( '../' )
-sys.path.append( './modules' )
-
 from BeautifulSoup import BeautifulSoup as htmldom
 import mechanize
 import re
@@ -22,8 +18,8 @@ class Browser( BaseClass ):
 	##	Constructor
 	##	Initialize class properties & browser backend
 	###########################################################################
-	def __init__( self, username, password, user_agent, obey_robot_rules = False, max_api_items = 200, verbose = True ):
-		BaseClass.__init__( self, verbose = verbose )
+	def __init__( self, username, password, user_agent, obey_robot_rules = False, max_api_items = 200, logger = None ):
+		BaseClass.__init__( self, logger = logger )
 		self.trace()
 
 		# configuration
@@ -227,8 +223,7 @@ class Browser( BaseClass ):
 
 		if censor_url:
 			self.last_url = '<<hidden>>'
-		if self.verbose:
-			print self.last_url
+		self.traceMessage(self.last_url)
 
 		# load page
 		if visit:
@@ -361,7 +356,6 @@ class Browser( BaseClass ):
 		if self.parsed.getElementsByTagName( 'error' ):
 			error = self.parsed.getElementsByTagName( 'error' )[0]
 			if error.getAttribute('code'):
-				print '%s: %s' % ( error.getAttribute('code'), error.getAttribute('info') )
 				raise self.Error, '%s: %s' % ( error.getAttribute('code'), error.getAttribute('info') )
 			else:
 				raise self.Error, self.readXmlElement( error )
@@ -462,7 +456,7 @@ class Browser( BaseClass ):
 
 			# store session
 			self.storeSession( self.url_base, self.username )
-			print '	logged in on %s' % self.url_base
+			self.traceMessage('	logged in on %s' % self.url_base)
 
 			# clear page text
 			self.text = '<<hidden>>'

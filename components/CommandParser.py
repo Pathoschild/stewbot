@@ -18,6 +18,7 @@ class CommandParser( BaseClass ):
 	def __init__( self,
 		commands,                   # hash of levels and commands: {0:['foo',...], 1:[...]}
 		users,                      # hash of levels and users: {1:['person',...], 2:[...]}
+		logger,                     # an ILogger implementation to send log messages to
 		callback = None,            # an instance; if not None, it will call:
 		                            # - handle_<command> for valid commands;
 		                            # - handle_None for valid command if handle_<command> not defined;
@@ -30,9 +31,9 @@ class CommandParser( BaseClass ):
 		handle_commit = True,       # handle !commit and !cancel?
 		no_commit_commands = [],    # array of commands that cannot be !commit'd
 		commit_req_user_level = 1,  # access level required to queue a command for !commit
-		commit_imp_user_level = 2   # access level required to !commit a queued command
+		commit_imp_user_level = 2,   # access level required to !commit a queued command
 	):
-		BaseClass.__init__( self )
+		BaseClass.__init__( self, logger = logger )
 		self.trace()
 
 		# constants

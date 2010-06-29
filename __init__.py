@@ -11,9 +11,6 @@
 ##		- list admins by latest activity
 ##		- backup RC reader
 #######################################################
-import sys
-sys.path.append( '../modules' )
-
 from __config__ import config
 from Stewardbot import Stewardbot
 
@@ -27,6 +24,7 @@ bot = Stewardbot(
 	user             = config.irc.user,
 	password         = config.irc.password,
 	channels         = config.irc.chans,
-	ssl              = config.irc.ssl
+	ssl              = config.irc.ssl,
+	logger           = config.components.logger
 )
 bot.processForever()

@@ -5,8 +5,6 @@
 #######################################################
 import sys
 import random
-
-sys.path.append( './' )
 from BaseClass import BaseClass
 
 ###################
@@ -17,8 +15,8 @@ class Bash( BaseClass ):
 	##	Constructor
 	##	Seeds random, builds list of quotes
 	###########################################################################
-	def __init__(self):
-		BaseClass.__init__( self )
+	def __init__(self, logger):
+		BaseClass.__init__( self, logger = logger )
 		self.trace()
 
 		random.seed()
@@ -96,12 +94,12 @@ class Bash( BaseClass ):
 			'Jesse tinky!',
 			'Where Jessenel? :(',
 			'So sad, so lost. :(',
-			'Noooo, Chloë perfect! :D',
+			'Noooo, Chloï¿½ perfect! :D',
 			'*pout*',
 			'Dat gwandad, a pain!',
-			'Chloë hungwy!',
+			'Chloï¿½ hungwy!',
 			'Where Michael be?',
-			'Chloë 5 years old. Chloë go school!',
+			'Chloï¿½ 5 years old. Chloï¿½ go school!',
 			'Germs-a-gone',
 			'Germs est parti!',
 			'No naughty chair! >:(',
@@ -184,7 +182,7 @@ class Bash( BaseClass ):
 		return 'no quote matched your search.'
 
 	###################
-	##	Return Chloëquote
+	##	Return Chloï¿½quote
 	###################
 	def chloe( self ):
 		self.trace()

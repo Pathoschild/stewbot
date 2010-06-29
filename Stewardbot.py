@@ -5,17 +5,13 @@
 #######################################################
 import copy # shallow copy objects
 import re   # regex
-import sys
-
-sys.path.append('./')
-sys.path.append('../modules')
 from __config__ import config, documentation, ACCESS_WHITELISTED, ACCESS_OPERATOR
-from Bash       import Bash       # !bash - random quotes
-from Wikimedia  import Browser    # web interface, listing wikis, handling prefixes, etc
-from BaseClass  import BaseClass
-from IRC        import IRC
-from Documentation import Documentation
-from CommandParser import CommandParser
+from components.Bash       import Bash       # !bash - random quotes
+from components.Wikimedia  import Browser    # web interface, listing wikis, handling prefixes, etc
+from components.BaseClass  import BaseClass
+from components.IRC        import IRC
+from components.Documentation import Documentation
+from components.CommandParser import CommandParser
 
 ###################
 ## Stewardbot class
@@ -25,8 +21,8 @@ class Stewardbot( BaseClass ):
 	##	Constructor
 	##	Initializes properties & settings, instantiates required classes.
 	#############################################################################################################
-	def __init__( self, server, port, nick, user, password, channels, ssl ):
-		BaseClass.__init__( self, config.debug.verbose )
+	def __init__( self, server, port, nick, user, password, channels, ssl, logger ):
+		BaseClass.__init__( self, logger )
 		self.__name__ = 'Stewardbot'
 		self.trace()
 
@@ -54,8 +50,8 @@ class Stewardbot( BaseClass ):
 		#############
 		## Classes
 		#############
-		self.help = Documentation( documentation )
-		self.bash = Bash()
+		self.help = Documentation( documentation, logger = logger )
+		self.bash = Bash(logger = logger)
 
 		self.parser = CommandParser(
 			commands       = config.irc.commands_by_level,
@@ -64,7 +60,8 @@ class Stewardbot( BaseClass ):
 			banned         = config.irc.ignore_masks,
 			command_prefix = config.irc.command_prefix,
 			command_delimiter = config.irc.command_delimiter,
-			no_commit_commands = config.irc.commands_nocommit
+			no_commit_commands = config.irc.commands_nocommit,
+			logger         = logger
 		)
 
 		self.browser = Browser(
@@ -72,7 +69,8 @@ class Stewardbot( BaseClass ):
 			password      = config.web.password,
 			user_agent    = config.web.user_agent,
 			max_api_items = config.web.max_api_items,
-			default_base_url = config.web.default_base_url
+			default_base_url = config.web.default_base_url,
+			logger        = logger
 		)
 		self.browser.login()
 
@@ -85,7 +83,8 @@ class Stewardbot( BaseClass ):
 			chans    = channels,
 			ssl      = ssl,
 			default_quit_reason = config.irc.quit_reason,
-			callback_pubmsg     = self.onPublicMessage
+			callback_pubmsg     = self.onPublicMessage,
+			logger = logger
 		)
 		self.connect()
 
@@ -141,7 +140,7 @@ class Stewardbot( BaseClass ):
 
 		# return result
 		if condition:
-			print '>> %s' % data.command
+			self.logger.Log('>> %s' % data.command)
 			self.respond( data, '%s; help says %s' % (msg or 'invalid syntax', self.help.get([data.command])) )
 			return True
 		else:
@@ -199,8 +198,8 @@ class Stewardbot( BaseClass ):
 		self.trace()
 
 		# security exception: !cancel own request
-		print "%s == %s" % (data.flag, self.parser.NOT_ALLOWED)
-		print data.command
+		self.logger.Log("%s == %s" % (data.flag, self.parser.NOT_ALLOWED))
+		self.logger.Log(data.command)
 
 		if data.flag in (self.parser.CANNOT_COMMIT, self.parser.NOT_ALLOWED) and data.command == 'cancel':
 			if self.syntaxError( data, count=[1,2] ):
@@ -911,7 +910,7 @@ class Stewardbot( BaseClass ):
 		# print to console, queue commands for !commit
 		ids = []
 		for line in lines:
-			print "######\n%s\n#####" % line
+			self.logger.Log("######\n%s\n#####" % line)
 			if line:
 				queue = copy.copy(data)
 				queue.args = copy.copy(data.args)

@@ -7,11 +7,8 @@
 ##      to __config__.py, and override settings in that file.
 #######################################################
 import re # regex
-import sys
-
-sys.path.append('./')
-sys.path.append('../modules')
-from StrictDict import StrictDict
+from components.logging.ConsoleLogger import ConsoleLogger
+from components.StrictDict import StrictDict
 
 ###################
 ## Overall configuration
@@ -64,7 +61,7 @@ config = StrictDict({
 				'wikimedia/erwin':'Erwin',
 				'wikimedia/guillom':'Guillom',
 				'wikipedia/jdelanoy':'J.delanoy',
-				'wikimedia/jhs':'Jon Harald Søby',
+				'wikimedia/jhs':'Jon Harald Sï¿½by',
 				'wikipedia/Jyothis':'Jyothis',
 				'wikimedia/Kylu':'Kylu',
 				'kamfjord.org':'Laaknor',
@@ -153,6 +150,13 @@ config = StrictDict({
 		'verbose':True,   # Trace function calls and interesting events to terminal
 		'dump_file':None, # File path to dump exception data to (or None to disable dumping)
 		'dump_url':None   # URL to link to in IRC error messages (or None to show file path)
+	},
+	
+	###################
+	## Components
+	###################
+	'components':{
+		'logger':ConsoleLogger()
 	}
 }, name = 'config')
 
