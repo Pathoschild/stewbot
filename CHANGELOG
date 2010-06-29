@@ -2,7 +2,8 @@
 	- improved file structure, simplified module inclusion;
 	- added component interface pattern;
 	- added configurable logging/output (messages can now be sent to console, file, or nowhere);
-	- prefer packaged modules over system modules (resolves version conflicts).
+	- prefer packaged modules over system modules (resolves version conflicts);
+	- added stewbot version number.
 
 2010-05-15 r12
 	- updated CentralAuth scraping for interface changes.
@@ -48,6 +49,6 @@
 2010-03-27 r2
 	- bugfix: commands can be queued for !commit even if they're configured as uncommittable (issue #5).
 
-2010-03-26 r3
+2010-03-26 r1
 	- now open-source; initial commit.
 
