@@ -1,5 +1,5 @@
 # empty __init__ to ensure Python treats the directory as a package namespace.
 
-# directory for third-party modules, used if they're not present on the system
+# directory for third-party modules, used preferentially to ensure correct versions
 import os, sys;
-sys.path.append(os.path.dirname(__file__) + '/modules')
+sys.path.insert(0, os.path.dirname(__file__) + '/modules')
