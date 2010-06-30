@@ -25,6 +25,7 @@ bot = Stewardbot(
 	password         = config.irc.password,
 	channels         = config.irc.chans,
 	ssl              = config.irc.ssl,
-	logger           = config.components.logger
+	logger           = config.components.logger,
+	exceptionLogger  = config.components.exceptionLogger
 )
 bot.processForever()

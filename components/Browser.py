@@ -20,7 +20,7 @@ class Browser( BaseClass ):
 	###########################################################################
 	def __init__( self, username, password, user_agent, obey_robot_rules = False, max_api_items = 200, logger = None ):
 		BaseClass.__init__( self, logger = logger )
-		self.trace()
+		self.trace(overrides = {'password':'<<hidden>>'})
 
 		# configuration
 		self.username      = username
@@ -199,7 +199,7 @@ class Browser( BaseClass ):
 	##	required: setBaseUrl()
 	###################
 	def load( self, url = None, title = None, parameters = None, GET = False, visit = False, parse_as = None, unicodify = True, censor_url = False, catch_errors = True ):
-		self.trace()
+		(self.trace() if not censor_url else self.trace(overrides = {'parameters':'<<hidden>>'}))
 
 		# get URL & query string
 		if not url:
@@ -208,7 +208,7 @@ class Browser( BaseClass ):
 			url = self.url_base + self.path_article + title
 
 		if parameters:
-			parameters = self.urlEncode( parameters )
+			parameters = self.UrlEncode( parameters )
 
 		# force GET mode?
 		if GET and parameters:
@@ -238,7 +238,7 @@ class Browser( BaseClass ):
 		# fetch page text
 		self.text = self.response.read()
 		if unicodify:
-			self.text = self.parse( self.text )
+			self.text = self.Decode(self.text)
 
 		# parse page text
 		if not parse_as:
@@ -247,17 +247,17 @@ class Browser( BaseClass ):
 
 		parse_as = parse_as.lower()
 		if parse_as == 'xml':
-			self.parsed = xmldom.parseString( self.unparse(self.text) )
+			self.parsed = xmldom.parseString(self.Encode(self.text))
 			if catch_errors:
 				self.handleApiErrors()
 
 		elif parse_as == 'html':
-			self.parsed = htmldom( self.unparse(self.text) )
+			self.parsed = htmldom(self.Encode(self.text))
 			if catch_errors:
 				self.handleHtmlErrors()
 
 		elif parse_as == 'json':
-			self.parsed = simplejson.loads( self.unparse(self.text) )
+			self.parsed = simplejson.loads(self.Encode(self.text))
 		else:
 			raise self.Error, 'Browser::load cannot parse text as "%s", unrecognized format' % parse_as
 
@@ -267,7 +267,7 @@ class Browser( BaseClass ):
 	##	required: setBaseUrl()
 	###################
 	def queryApi( self, parameters, GET = False, censor_url = False ):
-		self.trace( overrides = {'parameters':'<<hidden>>'} )
+		(self.trace() if not censor_url else self.trace(overrides = {'parameters':'<<hidden>>'}))
 
 		# validate
 		if not self.url_api:
@@ -298,8 +298,8 @@ class Browser( BaseClass ):
 		self.trace()
 
 		self.response = self.browser.submit()
-		self.text     = self.parse( self.response.read() )
-		self.parsed   = htmldom( self.unparse(self.text) )
+		self.text     = self.Decode(self.response.read())
+		self.parsed   = htmldom(self.Encode(self.text))
 		self.handleHtmlErrors()
 
 
@@ -384,10 +384,10 @@ class Browser( BaseClass ):
 		#######
 		elif self.parsed.getElementsByTagName( 'login' ):
 			error  = self.parsed.getElementsByTagName('login')[0]
-			result = self.parse( error.getAttribute('result') )
+			result = self.Decode(error.getAttribute('result'))
 			if result != 'Success':
 				if result == 'NeedToken':
-					raise self.LoginTokenRequestedError, self.parse( error.getAttribute('token') )
+					raise self.LoginTokenRequestedError, self.Decode(error.getAttribute('token'))
 				else:
 					raise self.Error, {
 						'NoName':'NoName: You didn\'t set the lgname parameter',
@@ -410,7 +410,7 @@ class Browser( BaseClass ):
 			warnings = self.parsed.getElementsByTagName( 'warnings' )
 			if len( warnings ):
 				warning = warnings[0].getElementsByTagName( 'info' )[0]
-				raise self.Error, '%s' % self.parse( self.readXmlElement(warning) )
+				raise self.Error, '%s' % self.Decode(self.readXmlElement(warning))
 
 
 	###################
@@ -451,7 +451,7 @@ class Browser( BaseClass ):
 					'action':'login',
 					'lgname':self.username,
 					'lgpassword':self.password,
-					'lgtoken':token
+					'lgtoken':str(token)
 				}, censor_url = True)
 
 			# store session
@@ -497,7 +497,7 @@ class Browser( BaseClass ):
 				'ustoken':'userrights'
 			})
 			item  = self.parsed.getElementsByTagName( 'user' )[0]
-			token = self.parse( item.getAttribute('%stoken' % type) )
+			token = self.Decode(item.getAttribute('%stoken' % type))
 
 		# fetch any other token, with caching
 		else:
@@ -510,7 +510,7 @@ class Browser( BaseClass ):
 					'titles':title
 				})
 				item  = self.parsed.getElementsByTagName( 'page' )[0]
-				token = self.parse( item.getAttribute('%stoken' % type) )
+				token = self.Decode(item.getAttribute('%stoken' % type))
 
 		# extract token & store
 		self.storeSessionToken( type, token )
@@ -703,7 +703,7 @@ class Browser( BaseClass ):
 
 		# get revision ID
 		edit = self.parsed.getElementsByTagName('edit')[0]
-		return self.parse( edit.getAttribute('newrevid') )
+		return self.Decode(edit.getAttribute('newrevid'))
 
 
 	###################
@@ -767,7 +767,7 @@ class Browser( BaseClass ):
 		groups = []
 		items = self.parsed.getElementsByTagName( 'g' )
 		for i in range( len(items) ):
-			groups.append( self.parse(items[i].childNodes[0].nodeValue) )
+			groups.append(self.Decode(items[i].childNodes[0].nodeValue))
 		return groups
 
 

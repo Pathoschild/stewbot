@@ -35,7 +35,7 @@ class IRC( BaseClass ):
 		logger = None
 	):
 		BaseClass.__init__( self, logger = logger )
-		self.trace()
+		self.trace(overrides = {'password':'<<hidden>>'})
 
 		# data
 		self.address = server
@@ -166,7 +166,7 @@ class IRC( BaseClass ):
 		# split message along max size & queue
 		lines = [message[i:i+self.max_message_size] for i in range( 0, len(message), self.max_message_size )]
 		for line in lines:
-			self.traceMessage('send: ' + line)
+			self.traceMessage('	>> ' + line)
 			self.queue.append( [target, line] )
 
 		# reset last size if past delay
@@ -190,7 +190,7 @@ class IRC( BaseClass ):
 					time.sleep( self.throttle )
 
 			# send message
-			self.server.privmsg( target, self.unparse(line) )
+			self.server.privmsg( target, self.Encode(line) )
 			self.last_size = len(line)
 			self.next_send = time.time() + self.throttle
 
@@ -202,7 +202,7 @@ class IRC( BaseClass ):
 		self.trace()
 
 		if( nick ):
-			msg = u'%s: %s' % ( self.parse(nick), self.parse(msg) )
+			msg = u'%s: %s' % ( self.Decode(nick), self.Decode(msg) )
 
 		self._sendMessage(
 			target  = chan,

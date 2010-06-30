@@ -1,48 +1,20 @@
-#######################################################
-##	BaseClass
-##	Contains common class methods and properties.
-##
-##	Public properties:
-##		Error()
-##			Instance of Exception raised on error.
-##
-##	Public methods:
-##		verbose( function, locals )
-##			If VERBOSE, print function call to console.
-##		parse( obj<str> )
-##			convert any string object to a UTF-8 Unicode string.
-##		isAddress( text<str> )<bool>
-##			returns boolean: text is an IP address?
-#######################################################
-import re     # re, match
+import re
 import sys
-import urllib # urlencode
+import urllib
 import inspect
 import traceback
 import chardet
-from components.Interface import Interface
-from components.logging.ILogger import ILogger
-from components.logging.SilentLogger import SilentLogger
+import components.Interface as Interface
+import components.modules.Formatting as Formatting
+from components.ILogger import ILogger
+from components.LogSilent import LogSilent
 
 class BaseClass( object ):
-	###########################################################################
-	##	Constructor
-	##	Initialize properties.
-	###########################################################################
-	def __init__( self, logger ):
-		self.logger = logger
-		self.re_address = re.compile( '^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:/(?:1[6-9]|2[0-9]|3[0-2]))?$' )
-		
-		Interface.Assert(logger, ILogger)
+	"""
+	Base class providing common methods for encoding & decoding text, logging
+	messages, handling errors, and manipulating strings.
+	"""
 
-
-	###########################################################################
-	##	Profiling & error-handling
-	###########################################################################
-	###################
-	##	Error class
-	##	Raised with error messages
-	###################
 	class Error( Exception ):
 		"""Base error class"""
 	class LoginTokenRequestedError( Error ):
@@ -50,29 +22,118 @@ class BaseClass( object ):
 		Indicates a login token must be sent back to complete login (MediaWiki 1.15.3+);
 		the exception message is the token.
 		"""
+	
+	###########################################################################
+	##	Constructor
+	###########################################################################
+	def __init__( self, logger ):
+		"""
+		Initialize the base class and validate the logger component.
+		
+		@param logger: the ILogger object tasked with dispatching debug messages.
+		"""
+		self.logger = logger
+		self.re_address = re.compile( '^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:/(?:1[6-9]|2[0-9]|3[0-2]))?$' )
+		
+		Interface.Assert(self.logger, ILogger)
+	
+	
+	###########################################################################
+	##	String manipulation
+	###########################################################################
+	def Decode(self, input):
+		"""
+		Decode the arbitrary input string into a standard Unicode string.
+		
+		@param input: string to parse.
+		@return unicode: decoded string.
+		"""
+		return Formatting.Decode(input)
 
-	###################
-	##	Format argument
-	##	Given an arbitrary argument, format it for trace output
-	###################
-	def formatArg( self, value ):
-		# determine value
-		if isinstance( value, BaseClass ):
-			return u'<%s>' % inspect.getmodule( value ).__name__
-		elif inspect.ismethod( value ):
-			return u'{%s::%s}' % (inspect.getmodule( value ).__name__, value.__name__)
-		elif inspect.isfunction( value ):
-			return u'{%s}' % value.__name__
+
+	def Encode(self, obj):
+		"""
+		Encode the arbitrary input string into a raw UTF-8 bytestring. This is
+		necessary when passing text to a third-party module, because most modules
+		are incapable of processing decoded text.
+		
+		@param obj: string to parse.
+		@return str: encoded string.
+		"""
+		return Formatting.Encode(obj)
+
+
+	def UrlEncode( self, obj ):
+		"""
+		Convert the dict into an escaped HTTP query string, without the leading
+		? character.
+		
+		@param obj: dict to parse.
+		@return str: encoded URL query string.
+		"""
+		return Formatting.UrlEncode(obj)
+
+		
+	def capitalizeFirstLetter( self, text ):
+		"""
+		Capitalize the first character in the string.
+		
+		@param text: string to modify.
+		@return str: modified string.
+		"""
+		self.trace()
+
+		if text[0].isupper():
+			return text
+
 		else:
-			return value
+			text = list(text)
+			text[0] = text[0].upper()
+			text = ''.join(text)
+			return text
+	
 
+	def isAddress( self, text ):
+		"""
+		Indicate whether a string represents a valid IP address.
+		
+		@param text: string to check.
+		@return bool: whether the string is a valid IP address.
+		"""
+		self.trace()
+		return self.re_address.match( text )
+	
 
-	###################
-	##	Trace
-	##	If VERBOSE, print function call to console.
-	###################
+	def isInt( self, text ):
+		"""
+		Indicate whether a string represents a valid integer.
+		
+		@param text: string to check.
+		@return bool: whether the string is a valid integer.
+		"""
+		self.trace()
+		try:
+			int(text)
+			return True
+		except TypeError:
+			return False
+		except ValueError:
+			return False
+	
+	
+	###########################################################################
+	##	Profiling & error-handling
+	###########################################################################
 	def trace( self, overrides=None ):
-		if not isinstance(self.logger, SilentLogger): # avoid pointless computing
+		"""
+		Send debug information about the containing function call to the logger.
+		
+		@keyword overrides: a dict of parameter names and values. When printing
+			the parent function call's parameters, this is checked for overrides
+			to display instead of the actual value.
+		@return None
+		"""
+		if not isinstance(self.logger, LogSilent): # avoid pointless computing
 			try:
 				# get frame
 				frame  = inspect.stack()[1][0]
@@ -99,7 +160,7 @@ class BaseClass( object ):
 					varargs     = args[1],
 					varkw       = args[2],
 					locals      = args[3],
-					formatvalue = lambda v: u'=%s' % self.formatArg(self.parse(v, suppress_trace = True))
+					formatvalue = lambda v: u'=%s' % self._FormatArg(self.Decode(v))
 				)
 
 				# trace
@@ -108,204 +169,83 @@ class BaseClass( object ):
 				del frame
 
 
-	###################
-	##	TraceMessage
-	##	If VERBOSE, print message to console.
-	###################
 	def traceMessage( self, msg ):
+		"""
+		Send an arbitrary message to the logger.
+		
+		@param msg: string message to send to the logger.
+		@return None
+		"""
 		self.logger.Log(msg)
 
 
-	###################
-	##	Print a formatted traceback to the console for the last raised exception,
-	##	and return summary suitable for display on IRC.
-	###################
-	def handleException( self ):
-		return self.formatException()
-	def formatException( self ):
+	def HandleException(self):
+		"""
+		Fetch details about the last exception raised from the system, dispatch
+		them to the log, and return a simplified summary string suitable for
+		display in the user interface.
+		
+		@return (str, str) tuple: simplified summary of exception & detailed
+			stack trace.
+		"""
 		self.trace()
 
 		# get data
 		(type, value, tb) = sys.exc_info()
 		tb = traceback.format_exc()
 
-		# extract details from traceback for IRC
+		# dispatch message to exception logger
+		logExc = '\n'
+		logExc += '##########################################################\n'
+		logExc += '### AN EXCEPTION OCCURRED:\n'
+		logExc += '###\n'
+		logExc += '### %s\n' % '\n### '.join( tb.splitlines() )
+	 	logExc += '###'
+		logExc += '##########################################################'
+		self.logger.Log(logExc)
+
+		# return summary for UI display
 		tb_last = traceback.format_exc().splitlines()
 		tb_last = tb_last[len(tb_last)-3] # get 3rd line from bottom (last detail before error, code)
-
-		self.logger.Log(self.formatFullException())
-		return "%s: %s. %s" % (type.__name__, str(value), str(tb_last))
-
-	def formatFullException( self ):
-		(type, value, tb) = sys.exc_info()
-		tb = traceback.format_exc()
-
-		exc = '\n'
-		exc += '##########################################################\n'
-		exc += '### AN EXCEPTION OCCURRED:\n'
-		exc += '###\n'
-		exc += '### %s\n' % '\n### '.join( tb.splitlines() )
-	 	exc += '###'
-		exc += '##########################################################'
-		exc +=''
-		return exc
+		return (
+			"%s: %s. %s" % (type.__name__, str(value), str(tb_last)),
+			logExc
+		)
 
 
 	###########################################################################
-	##	String manipulation
+	##	Various
 	###########################################################################
-	###################
-	##	Parse
-	##	Force a string to utf-8 Unicode
-	###################
-	def parse( self, obj, encodings = ['utf-8', 'ISO-8859-1', 'CP1252', 'latin1'], suppress_text = True, suppress_trace = True ):
-		if not suppress_trace:
-			self.trace() if not suppress_text else self.trace( overrides = {'obj':'<<hidden>>'} )
-
-		# if self.Error, convert to string first
-		if isinstance( obj, self.Error ):
-			obj = obj.args[0]
-
-		########
-		# Unicode?
-		########
-		if isinstance( obj, unicode ):
-			return obj
-
-		########
-		# String?
-		########
-		elif isinstance( obj, str ):
-			########
-			# Common encoding?
-			########
-			for encoding in encodings:
-				try:
-					string = obj.decode( encoding )
-					return string
-				except UnicodeDecodeError, e:
-					continue
-
-			########
-			# Try encoding detection algorithm
-			########
-			self.logger.Log('	>> unable to resolve text encoding, trying heuristic detection... ')
-			try:
-				detector = chardet.detect( obj )
-				self.logger.Log('		%s (%s confidence)... ' % ( detector['encoding'], detector['confidence'] ))
-				string = obj.decode( detector['encoding'] )
-				self.logger.Log('		ok!')
-				return string
-			except UnicodeDecodeError:
-				self.logger.Log('		failed!')
-
-			########
-			# Everything failed, try pretending nothing happened
-			########
-			# pretend it's ok?
-			self.logger.Log('	>> try pretending it\'s ok?')
-			return obj
-
-		########
-		# Numeric?
-		########
-		elif isinstance( obj, int ):
-			return str( obj )
-
-		########
-		# Anything else
-		########
-		else:
-			return obj
-
-
-	###################
-	##	Unparse
-	##	Decodes a UTF-8 Unicode string into bytes
-	###################
-	def unparse( self, obj, suppress_text = True, suppress_trace = True ):
-		if not suppress_trace:
-			self.trace() if not suppress_text else self.trace( overrides = {'obj':'<<hidden>>'} )
-
-		if isinstance( obj, unicode ):
-			return obj.encode('utf-8')
-		return obj
-
-	###################
-	##	urlEncode
-	##	Converts hash to URL-encoded string
-	###################
-	def urlEncode( self, obj, suppress_trace = True ):
-		self.trace() if not suppress_trace else self.trace( {'obj':'<<hidden>>'} )
-
-		_obj = {}
-		for k in obj.keys():
-			_obj[self.unparse(k)] = self.unparse( obj[k] )
-		return urllib.urlencode( _obj )
-
-		#return urllib.urlencode( obj )
-		# flatten
-		#str = ''
-		#for k in obj.keys():
-		#	v = "%s" % self.unparse(obj[k])
-		#	k = "%s" % self.unparse(k)
-		#	str += u"%s=%s&" % ( urllib.quote(k), urllib.quote(v) )
-		#str = str.rstrip( '&' )
-		#
-		#return str
-
-
-	###################
-	## capitalize first letter
-	###################
-	def capitalizeFirstLetter( self, text ):
-		self.trace()
-
-		if text[0].isupper():
-			return text
-
-		else:
-			text = list(text)
-			text[0] = text[0].upper()
-			text = ''.join(text)
-			return text
-
-
-	###################
-	##	isAddress
-	##	Boolean: string is IP address?
-	###################
-	def isAddress( self, text ):
-		self.trace()
-		return self.re_address.match( text )
-
-
-	###################
-	##	isInt
-	##	Boolean: string is an integer?
-	###################
-	def isInt( self, text ):
-		self.trace()
-		try:
-			int(text)
-			return True
-		except TypeError:
-			return False
-		except ValueError:
-			return False
-
-
-	###########################################################################
-	##	Object manipulation
-	###########################################################################
-	###################
-	##	hasIndex
-	##	Boolean: object has the specified index?
-	###################
 	def hasIndex( self, obj, i ):
+		"""
+		Indicate whether an object is indexable and has the specified index.
+		
+		@param obj: the object to index.
+		@param i: the index value to check the object for.
+		@return boolean: whether the object contains the index.
+		"""
 		self.trace()
 		try:
 			obj[i]
 			return True
 		except:
 			return False
+
+	
+	###########################################################################
+	## Private methods
+	###########################################################################
+	def _FormatArg( self, value ):
+		"""
+		Format an arbitrary argument for trace output.
+		
+		@param value: an arbitrary object to format for output.
+		"""
+		if isinstance(value, BaseClass):
+			return u'<%s>' % inspect.getmodule(value).__name__
+		elif inspect.ismethod(value):
+			return u'{%s::%s}' % (inspect.getmodule(value).__name__, value.__name__)
+		elif inspect.isfunction(value):
+			return u'{%s}' % value.__name__
+		else:
+			return value

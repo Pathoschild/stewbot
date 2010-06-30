@@ -6,8 +6,11 @@
 ##	DO NOT MODIFY THIS FILE DIRECTLY! Move __config__.example.py
 ##      to __config__.py, and override settings in that file.
 #######################################################
-import re # regex
-from components.logging.ConsoleLogger import ConsoleLogger
+import os
+import re
+import CHANGELOG
+from components.LogConsole import LogConsole
+from components.LogFile import LogFile
 from components.StrictDict import StrictDict
 
 ###################
@@ -142,21 +145,13 @@ config = StrictDict({
 			2:'global_bots'
 		}
 	},
-	
-	###################
-	## Debugging
-	###################
-	'debug':{
-		'verbose':True,   # Trace function calls and interesting events to terminal
-		'dump_file':None, # File path to dump exception data to (or None to disable dumping)
-		'dump_url':None   # URL to link to in IRC error messages (or None to show file path)
-	},
-	
+		
 	###################
 	## Components
 	###################
 	'components':{
-		'logger':ConsoleLogger()
+		'logger':LogConsole(), # logger to send debug messages to
+		'exceptionLogger':LogFile(os.path.dirname(__file__) + '/ERROR_LOG.txt') # logger to send full exception dumps to, or None to send to the regular logger
 	}
 }, name = 'config')
 
@@ -182,7 +177,7 @@ config.irc.commands = config.irc.commands_by_level[ACCESS_OPEN] + config.irc.com
 CONFIG_OPTIONS = ['confirm_all'] # used in "config" topic
 documentation = {
 	# special documentation
-	None:'I\'m a steward utility script, running stewbot r13. See: \'!help access\', \'!help commands\', or \'!help status\'',
+	None:'I\'m a steward utility script, running stewbot %s. See: \'!help access\', \'!help commands\', or \'!help status\'' % CHANGELOG.version,
 	'ACCESS':'commands are either open (anyone can issue them), whitelisted (whitelisted users only), or restricted (only operators, or whitelisted users if an operator !commit\'s them)',
 	'ACCESSLIST':'operators: [%s]; whitelisted users: [%s]' % (', '.join(config.irc.wiki_names_by_level[ACCESS_OPERATOR].values()), ', '.join(config.irc.wiki_names_by_level[ACCESS_WHITELISTED].values())),
 	'commands':'recognized commands: open [%s]; whitelisted [%s]; restricted [%s]. Say \'!help command_here\' for help on a specific command' % (', '.join(config['irc']['commands_by_level'][ACCESS_OPEN]), ', '.join(config['irc']['commands_by_level'][ACCESS_WHITELISTED]), ', '.join(config['irc']['commands_by_level'][ACCESS_OPERATOR])),

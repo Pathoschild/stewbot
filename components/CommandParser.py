@@ -181,7 +181,7 @@ class CommandParser( BaseClass ):
 	###################
 	def resolve( self, data ):
 		self.trace()
-		data.text       = self.parse( data.text )
+		data.text       = self.Decode(data.text)
 		data.commit_id  = None
 		data.error_text = None
 

@@ -1,6 +1,15 @@
+version = 'r14' # version reported by stewbot
+
+"""
+2010-06-29 r14
+	- BREAKING CHANGE: replaced config.debug* options for straight-to-file state
+	  dumping with new config.components.exceptionLogger. The config.debug*
+	  lines can be safely removed from configuration files without replacement
+	  to send exceptions to ERROR_LOG.txt in the bot directory.
+	- abstracted string encoding, fixed encoding crash when logging non-latin
+	  characters.
+	
 2010-06-28 r13
-	- improved file structure, simplified module inclusion;
-	- added component interface pattern;
 	- added configurable logging/output (messages can now be sent to console, file, or nowhere);
 	- prefer packaged modules over system modules (resolves version conflicts);
 	- added stewbot version number.
@@ -51,4 +60,4 @@
 
 2010-03-26 r1
 	- now open-source; initial commit.
-
+"""

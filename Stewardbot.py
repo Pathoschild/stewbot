@@ -7,11 +7,11 @@ import copy # shallow copy objects
 import re   # regex
 from __config__ import config, documentation, ACCESS_WHITELISTED, ACCESS_OPERATOR
 from components.Bash       import Bash       # !bash - random quotes
-from components.Wikimedia  import Browser    # web interface, listing wikis, handling prefixes, etc
 from components.BaseClass  import BaseClass
-from components.IRC        import IRC
-from components.Documentation import Documentation
 from components.CommandParser import CommandParser
+from components.Documentation import Documentation
+from components.IRC        import IRC
+from components.Wikimedia  import Browser    # web interface, listing wikis, handling prefixes, etc
 
 ###################
 ## Stewardbot class
@@ -21,10 +21,10 @@ class Stewardbot( BaseClass ):
 	##	Constructor
 	##	Initializes properties & settings, instantiates required classes.
 	#############################################################################################################
-	def __init__( self, server, port, nick, user, password, channels, ssl, logger ):
+	def __init__( self, server, port, nick, user, password, channels, ssl, logger, exceptionLogger = None ):
 		BaseClass.__init__( self, logger )
 		self.__name__ = 'Stewardbot'
-		self.trace()
+		self.trace(overrides = {'password':'<<hidden>>'})
 
 		#############
 		## Commands
@@ -34,6 +34,9 @@ class Stewardbot( BaseClass ):
 		#############
 		## Configuration
 		#############
+		# exception logger
+		self.exceptionLogger = (exceptionLogger if exceptionLogger is not None else logger)
+		
 		# default runtime config
 		self.options = {
 			'confirm_all':config.irc.confirm_all
@@ -61,7 +64,7 @@ class Stewardbot( BaseClass ):
 			command_prefix = config.irc.command_prefix,
 			command_delimiter = config.irc.command_delimiter,
 			no_commit_commands = config.irc.commands_nocommit,
-			logger         = logger
+			logger          = logger
 		)
 
 		self.browser = Browser(
@@ -70,7 +73,7 @@ class Stewardbot( BaseClass ):
 			user_agent    = config.web.user_agent,
 			max_api_items = config.web.max_api_items,
 			default_base_url = config.web.default_base_url,
-			logger        = logger
+			logger          = logger
 		)
 		self.browser.login()
 
@@ -84,7 +87,7 @@ class Stewardbot( BaseClass ):
 			ssl      = ssl,
 			default_quit_reason = config.irc.quit_reason,
 			callback_pubmsg     = self.onPublicMessage,
-			logger = logger
+			logger          = logger
 		)
 		self.connect()
 
@@ -110,7 +113,7 @@ class Stewardbot( BaseClass ):
 
 	def respond( self, data, msg, dot = True, nick = True ):
 		self.trace()
-		self.irc.sendMessage( data.channel, data.nick if nick else None, u'%s.' % self.parse(msg) if dot else msg )
+		self.irc.sendMessage( data.channel, data.nick if nick else None, u'%s.' % self.Decode(msg) if dot else msg )
 	def respondPrivately( self, data, msg ):
 		self.irc.sendPrivateMessage( data.nick, msg )
 
@@ -162,25 +165,29 @@ class Stewardbot( BaseClass ):
 		except KeyboardInterrupt:
 			self.sendMessage( data.channel, None, 'halted handling (requested by terminal operator).' )
 		except:
-			## notify IRC users
-			irc_text = 'unhandled exception: %s (see terminal)' % self.formatException()
-			if config.debug.dump_file != None:
-				dump_url = config.debug.dump_url
-				if not dump_url:
-					dump_url = config.debug.dump_file
-				irc_text += '. Dumping data to < %s >' % dump_url
-			self.sendMessage( data.channel, None, irc_text )
+			# log exception & dump bot state
+			(summary, detailed) = self.HandleException()
+
+			dump = (
+				'\n'
+				+ '==Exception==\n'
+				+ detailed
+				+ '\n\n==Last page loaded=='
+				+ self.browser.last_url
+				+ '\n\n'
+				+ self.browser.text
+			)
+			self.exceptionLogger.Log(dump)
+			if self.exceptionLogger.GetLocationString() is not self.logger.GetLocationString():
+				self.logger.Log("Exception details sent to exception dump log (%s)" % self.exceptionLogger.GetLocationString())
 			
-			## dump data
-			if config.debug.dump_file != None:
-				try:
-					dump = open( config.debug.dump_file, 'w' )
-					dump.write( self.formatFullException() )
-					dump.write( '\n\nLast page loaded: %s\n' % self.browser.last_url )
-					dump.write( self.unparse(self.browser.text) )
-					dump.close()
-				except:
-					self.sendMessage( data.channel, None, "Dump failed: %s" % self.formatException() )
+			# notify IRC users
+			irc_error = 'An unhandled exception has occurred: %s.' % summary
+			irc_text  = 'Exception details have been sent to the log (%s)' % self.logger.GetLocationString()
+			if self.exceptionLogger.GetLocationString() is not self.logger.GetLocationString():
+				irc_text += " and the exception dump log (%s)" % self.exceptionLogger.GetLocationString()
+			self.respond(data, irc_error, dot = False)
+			self.respond(data, irc_text, nick = False)
 
 
 	###################
@@ -383,13 +390,13 @@ class Stewardbot( BaseClass ):
 
 		# query stewardry API
 		try:
-			url = 'http://toolserver.org/~pathoschild/stewardry/?%s' % self.urlEncode( {'wiki':args[WIKI]} )
+			url = 'http://toolserver.org/~pathoschild/stewardry/?%s' % self.UrlEncode( {'wiki':args[WIKI]} )
 			self.browser.load( url = url, parameters = {'api':'1'}, parse_as = 'xml', GET = True )
 		except self.Error, e:
 			self.respond( data, e )
 			return
 		except:
-			self.respond( data, 'An error occurred while querying the Stewardry API: %s' % self.formatException() )
+			self.respond( data, 'An error occurred while querying the Stewardry API: %s' % self.HandleException() )
 			return
 
 		# fetch result
@@ -643,7 +650,7 @@ class Stewardbot( BaseClass ):
 		if self.isAddress( args[USER] ):
 			self.respond( data, 'http://toolserver.org/~pathoschild/stalktoy?target=%s | http://toolserver.org/~luxo/contributions/contributions.php?user=%s&blocks=true | \x0314http://whois.domaintools.com/%s\x03 | \x0304http://meta.wikimedia.org/wiki/Special:GlobalBlock?wpAddress=%s&wpReason=crosswiki+abuse\x03' % ( args[USER], args[USER], args[USER], args[USER] ))
 		else:
-			self.respond( data, 'http://toolserver.org/~pathoschild/stalktoy?%s | http://toolserver.org/~luxo/contributions/contributions.php?%s | \x0304http://meta.wikimedia.org/wiki/Special:CentralAuth?%s\x03' % (self.urlEncode({'target':args[USER]}), self.urlEncode({'user':args[USER], 'blocks':'true'}), self.urlEncode({'target':args[USER]})) )
+			self.respond( data, 'http://toolserver.org/~pathoschild/stalktoy?%s | http://toolserver.org/~luxo/contributions/contributions.php?%s | \x0304http://meta.wikimedia.org/wiki/Special:CentralAuth?%s\x03' % (self.UrlEncode({'target':args[USER]}), self.UrlEncode({'user':args[USER], 'blocks':'true'}), self.UrlEncode({'target':args[USER]})) )
 
 
 	###################
@@ -728,7 +735,7 @@ class Stewardbot( BaseClass ):
 		if len( edits ) == 0:
 			self.respond( data, '%s\'s unified accounts have no edits' % args[USER] )
 		else:
-			path = '/wiki/Special:Contributions?%s' % self.urlEncode( {'target':args[USER]} )
+			path = '/wiki/Special:Contributions?%s' % self.UrlEncode( {'target':args[USER]} )
 			total_edits = sum( edits.values() )
 			sorted_items = sorted( edits.items(), key = lambda (k,v): (v,k), reverse = True ) # order by edits desc
 
@@ -895,7 +902,7 @@ class Stewardbot( BaseClass ):
 		try:
 			self.browser.load( url = args[URL] )
 		except:
-			self.respond( data, 'An error occurred while following the URL: %s' % self.formatException() )
+			self.respond( data, 'An error occurred while following the URL: %s' % self.HandleException() )
 			return
 
 		# strip HTML markup
@@ -971,7 +978,7 @@ class Stewardbot( BaseClass ):
 
 		# display links
 		msg = self.browser.getUrl( prefix = wiki )
-		msg += 'Special:Checkuser?%s' % self.urlEncode( {'user':target, 'reason':'checking crosswiki abuse'} )
+		msg += 'Special:Checkuser?%s' % self.UrlEncode( {'user':target, 'reason':'checking crosswiki abuse'} )
 		self.respond( data, msg )
 
 
@@ -1033,7 +1040,7 @@ class Stewardbot( BaseClass ):
 			self.respond( data, e )
 			return
 
-		path = 'Special:Contributions?%s' % self.urlEncode( {'target':user} )
+		path = 'Special:Contributions?%s' % self.UrlEncode( {'target':user} )
 
 		# scan each account, block/blockhide
 		for wiki in wikis:

@@ -19,7 +19,3 @@ config.irc.password = ''                  # the password of the IRC user account
 # web
 config.web.user     = ''                  # The wiki username to log in with.
 config.web.password = ''                  # the wiki password to log in with.
-
-# debug
-config.debug.dump_file = None             # The path on the local filesystem to dump data to when an unhandled exception occurs (or None to disable dumping).
-config.debug.dump_url  = None             # The URL to the dump file to show in error messages on IRC when an unhandled exception occurs (or None to disable URL).
