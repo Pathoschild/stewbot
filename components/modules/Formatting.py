@@ -32,7 +32,11 @@ def Decode(input, encodings = ['utf-8', 'ISO-8859-1', 'CP1252', 'latin1']):
 		# maybe we can pretend it's okay?
 		return input
 	else:
-		return Decode(str(input))
+		try:
+			return Decode(str(input))
+		except UnicodeDecodeError:
+			raise UnicodeDecodeError, 'Cannot decode non-string object with Unicode representation "%s".' % repr(input)
+			
 
 
 def Encode(obj, encoding = 'utf-8'):
