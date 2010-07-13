@@ -1,6 +1,10 @@
-version = 'r14' # version reported by stewbot
+version = 'r15' # version reported by stewbot
 
 """
+2010-07-13 r15
+	- now raises ValueError when user is assigned multiple access levels in config;
+	- overrode StrictDict iterators to never iterate over internal __name__ item.
+
 2010-06-29 r14
 	- BREAKING CHANGE: replaced config.debug* options for straight-to-file state
 	  dumping with new config.components.exceptionLogger. The config.debug*

@@ -105,6 +105,8 @@ class CommandParser( BaseClass ):
 				self.command_hash[command] = group or 0
 		for group in self.user_groups:
 			for user in self.user_groups[group]:
+				if user in self.user_hash:
+					raise ValueError( "Cannot parse user access list, user '%s' is assigned multiple access levels (%s, %s)" % (user, self.user_hash[user], group) )
 				self.user_hash[user] = group
 
 		# build regexes

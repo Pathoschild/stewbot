@@ -47,8 +47,30 @@ class StrictDict( dict ):
 			dict.__setitem__( self, key, value )
 		else:
 			dict.__setitem__( self, key, StrictDict(value, name = '%s[\'%s\']' % (self.__name__, key)) )
+			
+			
+	###################
+	## Override iterators to ignore __name__
+	###################
+	def keys(self):
+		return [key for key in dict.keys(self) if key != '__name__']
+		
+	def items(self):
+		return [(key, value) for (key, value) in dict.items(self) if key != '__name__']
+	
+	def values(self):
+		return [value for (key, value) in dict.items(self) if key != '__name__']
+	
+	def iterkeys(self):
+		return dict.iterkeys(dict(self.items()))
+	
+	def itervalues(self):
+		return dict.itervalues(dict(self.items()))
 
-
+	def __iter__(self):
+		return dict.__iter__(dict(self.items()))
+		
+		
 	###################
 	## Write value to a key, skipping key-exists validation
 	###################
