@@ -1051,6 +1051,7 @@ class Stewardbot( BaseClass ):
 				# fetch edit counts
 				counts = self.browser.countUserEdits( user )
 				(edits, top_edits, new_pages, unreverted) = (counts['edits'], counts['top'], counts['new'], counts['unreverted'])
+				blocked = skipped = False
 
 				# raise warning if top/new edits
 				if unreverted:
@@ -1076,21 +1077,25 @@ class Stewardbot( BaseClass ):
 					hidename = False
 
 				# block / blockhide
-				blocked = self.browser.block(
-					user    = user,
-					expiry  = 'never',
-					reason  = reason,
-					noemail = True,
-					hidename= hidename,
-					allowusertalk = False,
-					autoblock = True,
-					reblockIfChanged = True,
-					reblock = reblock
-				)
+				if wiki in ['enwikibooks']:
+					action = 'didn\'t block on this wiki by user request'
+					skipped = True
+				else:
+					blocked = self.browser.block(
+						user    = user,
+						expiry  = 'never',
+						reason  = reason,
+						noemail = True,
+						hidename= hidename,
+						allowusertalk = False,
+						autoblock = True,
+						reblockIfChanged = True,
+						reblock = reblock
+					)
 
 				# report
 				color = '\x0304' if (top_edits or new_pages or blocked) else '\x03' if edits else '\x0315'
-				self.respond( data, '%s[%s:%s] %s %s\x03' % (color, count_wikis, wiki, 'okay' if not blocked else action, notes), nick = False )
+				self.respond( data, '%s[%s:%s] %s %s\x03' % (color, count_wikis, wiki, 'okay' if (not blocked and not skipped) else action, notes), nick = False )
 			except self.Error, e:
 				self.respond( data, '[%s:%s] %s' % (count_wikis, wiki, e), nick = False )
 			finally:
