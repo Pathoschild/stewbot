@@ -1,6 +1,10 @@
-version = 'r15' # version reported by stewbot
+version = 'r16' # version reported by stewbot
 
 """
+2010-08-08 r16
+	- !stab no longer blocks on enwikibooks, per
+	  http://lists.wikimedia.org/pipermail/foundation-l/2010-August/060447.html
+
 2010-07-13 r15
 	- now raises ValueError when user is assigned multiple access levels in config;
 	- overrode StrictDict iterators to never iterate over internal __name__ item.
