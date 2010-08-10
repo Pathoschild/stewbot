@@ -1,6 +1,9 @@
-version = 'r16' # version reported by stewbot
+version = 'r17' # version reported by stewbot
 
 """
+2010-08-09 r17
+	- !stabhide overrides no-local-block list
+
 2010-08-08 r16
 	- !stab no longer blocks on enwikibooks, per
 	  http://lists.wikimedia.org/pipermail/foundation-l/2010-August/060447.html
