@@ -1077,8 +1077,8 @@ class Stewardbot( BaseClass ):
 					hidename = False
 
 				# block / blockhide
-				if wiki in ['enwikibooks']:
-					action = 'didn\'t block on this wiki by user request'
+				if not hide and wiki in ['enwikibooks']:
+					action = 'no block by local request'
 					skipped = True
 				else:
 					blocked = self.browser.block(
