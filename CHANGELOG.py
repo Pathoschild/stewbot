@@ -1,6 +1,9 @@
-version = 'r17' # version reported by stewbot
+version = 'r18' # version reported by stewbot
 
 """
+2010-10-17 r18
+	- Wikimedia.py: fixed handling of special *wikimedia wikis.
+
 2010-08-09 r17
 	- !stabhide overrides no-local-block list
 
