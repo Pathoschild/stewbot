@@ -62,8 +62,8 @@ class Browser( BaseBrowser ):
 		# parse specials
 		for wiki in self.parsed['sitematrix']['specials']:
 			self.storeWiki(
-				code    = wiki['code'],
-				family  = 'wiki',
+				code    = wiki['code'].replace('wikimedia', ''),
+				family  = ('wikimedia' if wiki['code'].endswith('wikimedia') else 'wiki'),
 				domain  = wiki['url'].replace('http://', ''),
 				special = True
 			)
