@@ -555,7 +555,7 @@ class Browser( BaseClass ):
 				'noemail':block.hasAttribute('noemail'),
 				'allowusertalk':block.hasAttribute('allowusertalk'),
 				'hidden':block.hasAttribute('hidden')
-			})		
+			})
 		return blocks
 		
 	

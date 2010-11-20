@@ -218,7 +218,7 @@ documentation = {
 	'gblock':'globally block an IP address or CIDR range, anonymous-users only; syntax is \'!gblock address > expiry > reason\'',
 	'gunblock':'globally unblock an IP address or CIDR range; syntax is \'!gunblock address > reason\'',
 	'stab':'lock global account, scan edits, and block all local accounts; syntax is \'!stab name\'',
-	'stabhide':'lock & hide global account, scan edits, block all local accounts, and oversight name in local logs and edit histories; syntax is \'!stabhide name\'',
+	'stabhide':'lock & hide global account, scan edits, block all local accounts, and oversight name in local logs and edit histories; syntax is \'!stabhide name\' or \'!stabhide name > option\' (where option can be \'hard\', indicating that local accounts should be hidden even if they have edits)',
 	'withlist':'Parse a plaintext newline-delimited list of values at the given URL, and queue \'!command > value > arguments\' for each value (!commit\'s needed); syntax is \'!withlist url > command > arguments...\'',
 	'wikiset':'Add or remove wikis in a wikiset; syntax is \'!wikiset id > +wiki,wiki,-wiki\' or \'!wikiset id > wiki > reason\', where id is one of [%s]' % ','.join(['%s=%s' % (k,v) for k,v in config['web']['wikiset_ids'].items()]),
 

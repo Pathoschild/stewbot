@@ -1,11 +1,15 @@
-version = 'r18' # version reported by stewbot
+version = 'r19' # version reported by stewbot
 
 """
+2010-11-20 r19
+	- !stabhide conflict detection algorithm revamped;
+	- !stabhide now has 'hard' option to hide accounts even if they have edits.
+
 2010-10-17 r18
 	- Wikimedia.py: fixed handling of special *wikimedia wikis.
 
 2010-08-09 r17
-	- !stabhide overrides no-local-block list
+	- !stabhide overrides no-local-block list.
 
 2010-08-08 r16
 	- !stab no longer blocks on enwikibooks, per

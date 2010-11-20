@@ -984,7 +984,7 @@ class Stewardbot( BaseClass ):
 
 	###################
 	## !stab / !stabhide
-	##	syntax: !stab > user
+	##	syntax: !stab > user or !stab > user > hard
 	###################
 	def handle_stabhide( self, data ):
 		self.handle_stab( data, hide = True, global_hide = True, reblock = True )
@@ -995,15 +995,19 @@ class Stewardbot( BaseClass ):
 		############
 		## Process arguments
 		############
-		# unpack
-		USER = 0
+		(USER, OPTS) = (0, 1)
 
 		# validate & copy
-		if self.syntaxError( data, count = 1 ):
+		if self.syntaxError( data, count = [1,2] ):
 			return
 		if self.syntaxError( data, 'cannot specify @wiki for a global command', condition=data.args[USER].find('@') == -1 ):
 			return
+		if self.syntaxError( data, 'unknown hide option', condition=(len(data.args) <= OPTS or data.args[OPTS].lower() == 'hard') ):
+			return
+				
+		# unpack
 		user  = data.args[USER]
+		hideWhenEdits = (len(data.args) > OPTS and data.args[OPTS].lower() == 'hard')
 
 		############
 		## Lock & hide global account
@@ -1046,42 +1050,62 @@ class Stewardbot( BaseClass ):
 		for wiki in wikis:
 			try:
 				self.handleAt( wiki )
-				notes = ''
-
-				# fetch edit counts
-				counts = self.browser.countUserEdits( user )
-				(edits, top_edits, new_pages, unreverted) = (counts['edits'], counts['top'], counts['new'], counts['unreverted'])
+				
+				##########
+				## Collect account details
+				##########
+				# edit counts
+				_counts = self.browser.countUserEdits( user )
+				(edits, top_edits, new_pages, unreverted) = (_counts['edits'], _counts['top'], _counts['new'], _counts['unreverted'])
 				blocked = skipped = False
-
-				# raise warning if top/new edits
+				
+				# block status
+				curBlock = self.browser.getBlockStatus( user )
+				curBlock = False if (len(curBlock) == 0) else curBlock[0]
+				curHidden = curBlock and curBlock['hidden']
+				
+				# report text
+				msgPrefix = '[%s:%s]' % (count_wikis, wiki)
+				notes = ''
 				if unreverted:
-					notes = '(WARNING: %s unreverted %s detected [total %s]: %s )' % (
+					notes = ' (OH NOES! %s unreverted %s detected [total %s]: <%s>)' % (
 						unreverted,
 						'edits & creations' if top_edits and new_pages else 'edits' if top_edits else 'pages',
 						edits,
 						'%s%s' % (self.browser.getUrl(prefix = wiki), path)
 					)
 				elif edits:
-					notes = '(%s edits)' % edits
-
-				# set options
-				if not edits and hide:
-					action   = 'blockhidden'
+					notes = ' (%s edits)' % edits
+				
+				# block options
+				if hide and (not edits or hideWhenEdits):
+					result   = 'blockhidden'
 					reason   = 'crosswiki abuse<!--[[m:SH#lock|globally locked & hidden]]; [[m:User:StewardBot|about bot]]-->'
 					reblock  = True
 					hidename = True
 				else:
-					action   = 'blocked'
+					result   = 'blocked'
 					reason   = 'crosswiki abuse<!--[[m:SH#lock|globally locked]]; [[m:User:StewardBot|about bot]]-->'
 					reblock  = reblock
 					hidename = False
 
-				# block / blockhide
+				##########
+				## Execute
+				##########
 				if not hide and wiki in ['enwikibooks']:
 					action = 'no block by local request'
 					skipped = True
+					
+				elif curHidden and curHidden == hide:
+					result = 'already %s' % result
+					skipped = True
+				
+				elif curHidden:
+					result = 'account is hidden, skipped'
+					skipped = True
+					
 				else:
-					blocked = self.browser.block(
+					if not self.browser.block(
 						user    = user,
 						expiry  = 'never',
 						reason  = reason,
@@ -1091,13 +1115,18 @@ class Stewardbot( BaseClass ):
 						autoblock = True,
 						reblockIfChanged = True,
 						reblock = reblock
-					)
-
-				# report
-				color = '\x0304' if (top_edits or new_pages or blocked) else '\x03' if edits else '\x0315'
-				self.respond( data, '%s[%s:%s] %s %s\x03' % (color, count_wikis, wiki, 'okay' if (not blocked and not skipped) else action, notes), nick = False )
+					):
+						result = 'already %s' % result
+						skipped = True
+					
+				##########
+				## Execute
+				##########
+				resColor = '15' if skipped else ''
+				noteColor = '04' if (top_edits or new_pages or blocked) else '' if edits else '15'
+				self.respond( data, '\x03%s%s %s\x03%s%s\x03' % (resColor, msgPrefix, result, noteColor, notes), nick = False )
 			except self.Error, e:
-				self.respond( data, '[%s:%s] %s' % (count_wikis, wiki, e), nick = False )
+				self.respond( data, '%s %s' % (msgPrefix, wiki, e), nick = False )
 			finally:
 				count_wikis -= 1
 				self.unhandleAt()
