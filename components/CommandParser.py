@@ -191,7 +191,7 @@ class CommandParser( BaseClass ):
 		groups = self.re_parse_cmd.search( data.text )
 		data.command = groups.group( 1 ).lower()
 		if self.re_has_args.search( data.text ):
-			data.args = self.re_split_args.split( groups.group(2) )
+			data.args = [arg.strip() for arg in self.re_split_args.split( groups.group(2) )]
 		else:
 			data.args = []
 

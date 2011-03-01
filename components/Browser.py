@@ -1050,7 +1050,7 @@ class Browser( BaseClass ):
 		for row in rows:
 			fields = row.findAll( 'td' )
 			wiki  = fields[1].find( 'a' ).string
-			count = int( fields[5].find( 'a').string )
+			count = int( fields[5].find( 'a').string.replace( ',', '' ) )
 
 			if count>0 or show_zero_edits:
 				edits[wiki] = count
