@@ -1,8 +1,11 @@
-version = 'r20' # version reported by stewbot
+version = 'r21' # version reported by stewbot
 
 """
+2011-03-29 r21
+	- bugfix: Wikimedia handler assigned incorrect family for betwikiversity.
+
 2011-03-01 r20
-	- fixed global edit count parsing for MW1.17wmf;
+	- bugfix: global edit count parsing broken in MW1.17wmf;
 	- added command parameter trimming.
 
 2010-11-20 r19
