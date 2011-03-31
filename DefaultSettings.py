@@ -37,6 +37,7 @@ config = StrictDict({
 		'quit_reason':'*poof*',
 		'command_prefix':'!*',
 		'command_delimiter':'<>',
+		'handle_commit':True, # whether the bot should expose the !commit / !cancel functionality
 		
 		########
 		## users

@@ -64,7 +64,8 @@ class Stewardbot( BaseClass ):
 			command_prefix = config.irc.command_prefix,
 			command_delimiter = config.irc.command_delimiter,
 			no_commit_commands = config.irc.commands_nocommit,
-			logger          = logger
+			logger          = logger,
+			handle_commit  = config.irc.handle_commit
 		)
 
 		self.browser = Browser(
