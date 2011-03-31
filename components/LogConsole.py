@@ -1,5 +1,5 @@
 import time
-from ILogger import ILogger
+from interfaces.ILogger import ILogger
 import Formatting
 
 class LogConsole(ILogger):

@@ -1,4 +1,4 @@
-from ILogger import ILogger
+from interfaces.ILogger import ILogger
 
 class LogSilent(ILogger):
 	"""

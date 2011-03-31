@@ -1,6 +1,6 @@
 class ILogger(object):
 	"""
-	Interface for a class responsible for logging messages to an arbitrary medium.
+	Represents a class responsible for logging messages to an arbitrary medium.
 	"""
 	
 	def GetLocationString(self):

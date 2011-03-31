@@ -6,7 +6,7 @@ import traceback
 import chardet
 import components.Interface as Interface
 import components.modules.Formatting as Formatting
-from components.ILogger import ILogger
+from components.interfaces.ILogger import ILogger
 from components.LogSilent import LogSilent
 
 class BaseClass( object ):
