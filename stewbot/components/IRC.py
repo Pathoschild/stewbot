@@ -106,7 +106,7 @@ class IRC( BaseClass ):
 		def copy( self ):
 			_copy = IRC.Message()
 			for ( key, item ) in self.__dict__.items():
-				_copy.__dict__[key] = copy.copy( item )
+				_copy.__dict__[key] = copy( item )
 			return _copy
 
 
@@ -118,11 +118,12 @@ class IRC( BaseClass ):
 	###################
 	def connect( self ):
 		self.trace()
-		if self.ssl == True:
+		if self.ssl:
 			self.server.connect( self.address, self.port, self.nick, self.password, self.user, ssl=True )
 		else:
 			self.server.connect( self.address, self.port, self.nick, self.password, self.user )
 
+	#noinspection PyUnusedLocal
 	def onConnect( self, conn, event ):
 		self.trace()
 		for chan in self.chans:
@@ -138,6 +139,7 @@ class IRC( BaseClass ):
 		self.server.add_global_handler( 'disconnect', self.onChosenDisconnect )
 		self.server.disconnect( msg if msg else self.default_quit_reason )
 
+	#noinspection PyUnusedLocal
 	def onChosenDisconnect( self, conn, event ):
 		self.trace()
 		sys.exit( 0 )
@@ -151,6 +153,7 @@ class IRC( BaseClass ):
 		self.trace()
 		self.server.disconnect( msg if msg else self.default_reset_reason )
 
+	#noinspection PyUnusedLocal
 	def onDisonnect( self, conn, event ):
 		self.trace()
 		self.connect()
@@ -200,7 +203,7 @@ class IRC( BaseClass ):
 	def sendMessage( self, chan, nick, msg ):
 		self.trace()
 
-		if( nick ):
+		if nick:
 			msg = u'%s: %s' % ( self.Decode(nick), self.Decode(msg) )
 
 		self._sendMessage(

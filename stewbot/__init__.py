@@ -48,8 +48,8 @@ class Stewardbot( BaseClass ):
 		# irc users
 		self.users = config.irc.wiki_names_by_level
 		self.wiki_names = config.irc.wiki_names
-		self.INDEX_USERS = ACCESS_WHITELISTED;
-		self.INDEX_OPERATORS = ACCESS_OPERATOR;
+		self.INDEX_USERS = ACCESS_WHITELISTED
+		self.INDEX_OPERATORS = ACCESS_OPERATOR
 
 		#############
 		## Classes
@@ -256,7 +256,7 @@ class Stewardbot( BaseClass ):
 			return
 
 		# parse options
-		if self.hasIndex( data.args, OPTION ):
+		if OPTION in data.args:
 			data.args[OPTION] = data.args[OPTION].lower()
 
 			if data.args[OPTION] not in ('quiet', 'verbose'):
@@ -270,10 +270,10 @@ class Stewardbot( BaseClass ):
 
 		# get list of commit IDs
 		(ids, not_queued) = self.parser.parseQueueId( data.args[ID] )
-		if len(self.parser.listQueued()) == 0:
+		if not len(self.parser.listQueued()):
 			self.respond( data, 'there are no queued commands' )
 			return
-		if len(ids) == 0:
+		if not len(ids):
 			self.respond( data, 'there are no queued commands with the given commit ids' )
 			return
 		if len(not_queued) > 0:
@@ -313,7 +313,7 @@ class Stewardbot( BaseClass ):
 	##	Default data argument value
 	###################
 	def defaultArg( self, data, index, value ):
-		if not self.hasIndex( data.args, index ):
+		if not index in data.args:
 			if len(data.args) < index:
 				raise self.Error, 'insufficient arguments to default at index %s' % str(index)
 			data.args.append( value )
@@ -325,7 +325,7 @@ class Stewardbot( BaseClass ):
 	###################
 	##	CentralAuth commands
 	###################
-	def handle_lock( self, data, commit = False ):
+	def handle_lock( self, data ):
 		self.handleCentralAuthCommand( data )
 	def handle_unlock( self, data ):
 		self.handleCentralAuthCommand( data )
@@ -398,7 +398,7 @@ class Stewardbot( BaseClass ):
 			self.respond( data, e )
 			return
 		except:
-			self.respond( data, 'An error occurred while querying the Stewardry API: %s' % self.HandleException() )
+			self.respond( data, 'An error occurred while querying the Stewardry API: %s' % self.HandleException()[0] )
 			return
 
 		# fetch result
@@ -419,7 +419,7 @@ class Stewardbot( BaseClass ):
 			return
 
 		# !bash (random)
-		if len( args ) == 0:
+		if not len(args):
 			self.respond( data, self.bash.stringOrRandom("<%s> %s" % (data.nick, data.text), 0.02), dot = False )
 
 		# !bash > id
@@ -488,7 +488,7 @@ class Stewardbot( BaseClass ):
 
 			# global blocks
 			items = self.browser.getGlobalBlocks(user)
-			if len(items) == 0:
+			if not len(items):
 				out += 'no global blocks'
 			else:
 				gblocks = []
@@ -525,7 +525,7 @@ class Stewardbot( BaseClass ):
 		try:
 			self.handleAt( wiki )
 			items = self.browser.getBlockStatus( user )
-			if len(items) == 0:
+			if not len(items):
 				out += '; no blocks on %s' % wiki
 			else:
 				blocks = []
@@ -565,7 +565,7 @@ class Stewardbot( BaseClass ):
 				address = args[TARGET],
 				reason  = args[REASON],
 				expiry  = args[EXPIRY]
-			);
+			)
 			if self.options['confirm_all']:
 				self.respond(data, 'done')
 		except self.Error, e:
@@ -591,7 +591,7 @@ class Stewardbot( BaseClass ):
 			self.browser.global_unblock(
 				address = args[TARGET],
 				reason  = args[REASON]
-			);
+			)
 			if self.options['confirm_all']:
 				self.respond( data, 'done' )
 		except self.Error, e:
@@ -669,7 +669,7 @@ class Stewardbot( BaseClass ):
 		##########
 		## List ids mode
 		##########
-		if arg_len == 0:
+		if not arg_len:
 			ids = self.parser.listQueued()
 			if len( ids ):
 				self.respond( data, 'uncommitted command ids: [%s]' % ','.join([str(id) for id in ids]) )
@@ -734,7 +734,7 @@ class Stewardbot( BaseClass ):
 			return
 		count_wikis = len( edits )
 
-		if len( edits ) == 0:
+		if not len(edits):
 			self.respond( data, '%s\'s unified accounts have no edits' % args[USER] )
 		else:
 			path = '/wiki/Special:Contributions?%s' % self.UrlEncode( {'target':args[USER]} )
@@ -904,7 +904,7 @@ class Stewardbot( BaseClass ):
 		try:
 			self.browser.load( url = args[URL] )
 		except:
-			self.respond( data, 'An error occurred while following the URL: %s' % self.HandleException() )
+			self.respond( data, 'An error occurred while following the URL: %s' % self.HandleException()[0] )
 			return
 
 		# strip HTML markup
@@ -912,7 +912,7 @@ class Stewardbot( BaseClass ):
 
 		# parse into list
 		lines = response.splitlines()
-		if len( lines ) == 0:
+		if not len(lines):
 			self.respond( data, 'No lines found at specified URL' )
 			return
 
@@ -921,8 +921,8 @@ class Stewardbot( BaseClass ):
 		for line in lines:
 			self.logger.Log("######\n%s\n#####" % line)
 			if line:
-				queue = copy.copy(data)
-				queue.args = copy.copy(data.args)
+				queue = copy(data)
+				queue.args = copy(data.args)
 				queue.args.insert( 0, line )
 				ids.append( self.parser.queue(queue) )
 
@@ -936,7 +936,7 @@ class Stewardbot( BaseClass ):
 	###################
 	def handle_debug( self, data ):
 		self.trace()
-		self.respond( data, self.bash.chloe(), dot = False, nick = False );
+		self.respond( data, self.bash.chloe(), dot = False, nick = False )
 		raise Exception, "Chloe crash! :D"
 
 
@@ -1095,7 +1095,7 @@ class Stewardbot( BaseClass ):
 				## Execute
 				##########
 				if not hide and wiki in ['enwikibooks']:
-					action = 'no block by local request'
+					result = 'no block by local request'
 					skipped = True
 
 				elif curHidden and curHidden == hide:
@@ -1128,7 +1128,7 @@ class Stewardbot( BaseClass ):
 				noteColor = '04' if (top_edits or new_pages or blocked) else '' if edits else '15'
 				self.respond( data, '\x03%s%s %s\x03%s%s\x03' % (resColor, msgPrefix, result, noteColor, notes), nick = False )
 			except self.Error, e:
-				self.respond( data, '%s %s' % (msgPrefix, wiki, e), nick = False )
+				self.respond( data, '%s %s %s' % (msgPrefix, wiki, e), nick = False )
 			finally:
 				count_wikis -= 1
 				self.unhandleAt()
@@ -1192,7 +1192,7 @@ class Stewardbot( BaseClass ):
 					reason  = args[REASON],
 					noemail = True,
 					hidename = hidename,
-					reblock = True#reblock
+					reblock = reblock
 				)
 				self.respond( data, '[%s%s] %s' % ('%s:' % count if (count > 1) else '', wiki, action) )
 			except self.Error, e:
@@ -1239,7 +1239,7 @@ class Stewardbot( BaseClass ):
 	## !unblock
 	##	syntax: !unblock > user > reason
 	###################
-	def handle_unblock( self, data, hidename = False ):
+	def handle_unblock( self, data ):
 		self.trace()
 		args = data.args
 		(USER, REASON) = (0, 1)
@@ -1341,14 +1341,12 @@ class Stewardbot( BaseClass ):
 			return
 
 		# fetch local groups
-		wiki = None
 		try:
 			# parse name@wiki
 			(user, wiki) = self.parseAt( args[USER], allowGlobal = False, getUsername = True )
 			wiki = wiki[0]
 
 			# fetch groups
-			local_groups = []
 			self.handleAt( wiki )
 			local_groups = self.browser.getRights( user )
 			global_groups = self.browser.getGlobalRights( user )
@@ -1381,7 +1379,7 @@ class Stewardbot( BaseClass ):
 		identifier = self.capitalizeFirstLetter(identifier)
 		if identifier.find('@') == -1:
 			if allowImplicit:
-				return (identifier, 'metawiki')
+				return identifier, 'metawiki'
 			else:
 				raise self.Error, 'implicit "@metawiki" not permitted in this context'
 
@@ -1390,7 +1388,7 @@ class Stewardbot( BaseClass ):
 			(user, wiki) = identifier.split( '@', 1 )
 			if wiki != 'global':
 				self.browser.getUrl( prefix = wiki )
-			return (user, wiki)
+			return user, wiki
 		except self.Error, e:
 			raise self.Error, e
 
@@ -1406,14 +1404,14 @@ class Stewardbot( BaseClass ):
 		if wiki == 'global':
 			if allowGlobal:
 				if getUsername:
-					return (user, self.browser.getGlobalAccounts( user ))
+					return user, self.browser.getGlobalAccounts( user )
 				else:
 					return self.browser.getGlobalAccounts( user )
 			else:
 				raise self.Error, '\'global\' is not allowed in this context'
 		else:
 			if getUsername:
-				return (user, [wiki])
+				return user, [wiki]
 			else:
 				return [wiki]
 

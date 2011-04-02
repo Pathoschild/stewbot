@@ -4,7 +4,7 @@
 ##	Abstracts user access restriction and command parsing.
 #######################################################
 import re
-import copy
+from copy import copy
 from stewbot.components.BaseClass import BaseClass
 
 ###################
@@ -29,7 +29,7 @@ class CommandParser( BaseClass ):
 		command_prefix = '!~',      # characters to recognize as the start of a command at beginning of line
 		command_delimiter = '<>',   # characters to recognize as delimiters between arguments
 		handle_commit = True,       # handle !commit and !cancel?
-		no_commit_commands = [],    # array of commands that cannot be !commit'd
+		no_commit_commands = None,  # array of commands that cannot be !commit'd
 		commit_req_user_level = 1,  # access level required to queue a command for !commit
 		commit_imp_user_level = 2,   # access level required to !commit a queued command
 	):
@@ -76,7 +76,7 @@ class CommandParser( BaseClass ):
 		self.user_groups       = users
 		self.banned_users      = banned
 		self.handle_commit     = handle_commit
-		self.no_commit         = no_commit_commands
+		self.no_commit         = (no_commit_commands if no_commit_commands is not None else [])
 		self.cmd_prefix        = command_prefix
 		self.cmd_delim         = command_delimiter
 		self.commit_req_level  = commit_req_user_level
@@ -141,7 +141,7 @@ class CommandParser( BaseClass ):
 		##########
 		## Parse & validate
 		##########
-		self.data = copy.copy( data )
+		self.data = copy( data )
 		self.data = self.resolve( self.data )
 
 		# command does not exist
@@ -165,7 +165,6 @@ class CommandParser( BaseClass ):
 				else:
 					self.queue( self.data )
 					return self._callback( self.data, self.MUST_COMMIT )
-				return self.data
 
 			# ...else fail
 			else:
@@ -249,7 +248,7 @@ class CommandParser( BaseClass ):
 
 		self.commit_id += 1
 		data.commit_id = self.commit_id
-		self.commit_queue[self.commit_id] = copy.copy( data )
+		self.commit_queue[self.commit_id] = copy( data )
 
 		return data.commit_id
 
@@ -259,7 +258,7 @@ class CommandParser( BaseClass ):
 	###################
 	def peekQueue( self, id ):
 		self.trace()
-		return copy.copy( self.commit_queue[id] )
+		return copy( self.commit_queue[id] )
 
 
 	###################
@@ -277,7 +276,7 @@ class CommandParser( BaseClass ):
 			else:
 				not_queued.append( id )
 
-		return (queued, not_queued)
+		return queued, not_queued
 
 
 	###################
@@ -288,7 +287,7 @@ class CommandParser( BaseClass ):
 
 		ids = ids.lower()
 		if ids == 'all':
-			return (self.listQueued(), [])
+			return self.listQueued(), []
 
 		elif re.search( '^\d+:\d+$', ids ):
 			(min, max) = ids.split( ':', 1 )
@@ -299,7 +298,7 @@ class CommandParser( BaseClass ):
 			return self.filterByQueued( [int(ids)] )
 
 		else:
-			return ([], ids)
+			return [], ids
 
 
 	###################
@@ -359,7 +358,6 @@ class CommandParser( BaseClass ):
 				return data
 
 			## determine method name
-			method_name = ""
 			if data.flag_group == self.OKAY:
 				method_name = 'handle_%s' % data.command
 			elif data.flag_group == self.ERROR:

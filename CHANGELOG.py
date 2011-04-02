@@ -1,9 +1,7 @@
-version = 'r22-alpha' # version reported by stewbot
-
 """
 2011-04-01 r22
-	- new configuration: toggle handling of !commit command;
-	- new explicit package (simpler, less conflicts, more robust).
+	- new configuration: toggle handling of !commit command.
+	- simplified package design.
 
 2011-03-29 r21
 	- bugfix: Wikimedia handler assigned incorrect family for betwikiversity.
@@ -90,3 +88,4 @@ version = 'r22-alpha' # version reported by stewbot
 2010-03-26 r1
 	- now open-source; initial commit.
 """
+version = 'r22-alpha' # version reported by stewbot

@@ -323,11 +323,11 @@ class Browser( BaseClass ):
 		self.trace()
 
 		# get prebuilt string
-		if( element.string ):
+		if element.string:
 			return element.string
 
 		# iterate over text nodes
-		if( element.childNodes ):
+		if element.childNodes:
 			nodes = element.childNodes
 			text = u''
 			for node in nodes:
@@ -389,8 +389,6 @@ class Browser( BaseClass ):
 					raise self.LoginTokenRequestedError, self.Decode(error.getAttribute('token'))
 				else:
 					raise self.Error, {
-						'NoName':'NoName: You didn\'t set the lgname parameter',
-						'Illegal':'Illegal: You provided an illegal username',
 						'NoName':'NoName: You didn\'t set the lgname parameter',
 						'Illegal':'Illegal: You provided an illegal username',
 						'NotExists':'NotExists: The username you provided doesn\'t exist',
@@ -484,7 +482,6 @@ class Browser( BaseClass ):
 		self.login()
 
 		# fetch userrights token
-		token = ''
 		if type == 'userrights':
 			if not user:
 				raise self.Error, "Cannot fetch userrights token without target username"
@@ -807,7 +804,7 @@ class Browser( BaseClass ):
 		for group, value in groups.items():
 			try:
 				control = self.browser.find_control( 'wpGroup-%s' % group ).items[0]
-			except ValueError, e:
+			except ValueError:
 				raise self.Error, 'no local group called "%s"' % group
 			if bool( control.selected ) != bool( value ):
 				control.selected = int( value )
@@ -835,7 +832,7 @@ class Browser( BaseClass ):
 		self.login()
 
 		# validate
-		if lock == None and hide == None and oversightLocal == None:
+		if lock is None and hide is None and oversightLocal is None:
 			raise self.Error, 'no lock or hide preferences specified'
 		if lock not in (True, False, None) or hide not in (True, False, None) or oversightLocal not in (True, False, None):
 			raise self.Error, 'hide and lock preferences must be one of (True, False, None)'
@@ -858,8 +855,8 @@ class Browser( BaseClass ):
 		HIDE_IGNORE = None
 		HIDE_LISTS  = "lists"
 		HIDE_SUPPRESSED = "suppressed"
-		set_lock = LOCK_YES if lock else LOCK_NO if lock != None else LOCK_IGNORE
-		set_hide = HIDE_SUPPRESSED if oversightLocal else HIDE_LISTS if hide else HIDE_NO if hide != None else HIDE_IGNORE
+		set_lock = LOCK_YES if lock else LOCK_NO if lock is not None else LOCK_IGNORE
+		set_hide = HIDE_SUPPRESSED if oversightLocal else HIDE_LISTS if hide else HIDE_NO if hide is not None else HIDE_IGNORE
 
 		# constants are invalid?
 		if set_lock != LOCK_IGNORE and set_lock not in [k.name for k in self.browser.find_control(NAME_LOCK).items]:
@@ -876,19 +873,19 @@ class Browser( BaseClass ):
 			if ignoreUnchanged:
 				return False
 			error = 'The global account "%s" is already ' % user
-			if set_lock != None:
+			if set_lock is not None:
 				error += 'locked' if set_lock == LOCK_YES else 'unlocked'
-			if set_hide != None:
-				if set_lock != None:
+			if set_hide is not None:
+				if set_lock is not None:
 					error += ' and '
 				error += 'hidden' if set_hide == HIDE_LISTS else 'globally oversighted' if set_hide == HIDE_SUPPRESSED else 'unhidden'
 			raise self.Error, error
 
 		# modify form
 		if set_lock != LOCK_IGNORE:
-			control = self.browser.find_control(NAME_LOCK).get(set_lock).selected = True
+			self.browser.find_control(NAME_LOCK).get(set_lock).selected = True
 		if set_hide != HIDE_IGNORE:
-			control = self.browser.find_control(NAME_HIDE).get(set_hide).selected = True
+			self.browser.find_control(NAME_HIDE).get(set_hide).selected = True
 		self.browser["wpReason"] = reason
 
 		self.submit()
@@ -913,10 +910,7 @@ class Browser( BaseClass ):
 		# parse status
 		NAME_LOCK = 'wpStatusLocked'
 		NAME_HIDE = 'wpStatusHidden'
-		LOCK_NO     = "0"
 		LOCK_YES    = "1"
-		HIDE_NO     = ""
-		HIDE_IGNORE = None
 		HIDE_LISTS  = "lists"
 		HIDE_SUPPRESSED = "suppressed"
 
@@ -958,8 +952,9 @@ class Browser( BaseClass ):
 		for block in self.getGlobalBlocks( address ):
 			blocks.append( block['address'] )
 		count = len( blocks )
-		if count:
-			blocks_str = blocks[0] if count==1 else '[%s]' % ', '.join( blocks )
+		blocks_str = blocks[0] if count==1\
+			else '[%s]' % ', '.join( blocks ) if count\
+			else None
 		collateral = ( count > 1 or (count and blocks_str != address) )
 
 		# block
@@ -1006,7 +1001,7 @@ class Browser( BaseClass ):
 	##	required: setBaseUrl() to metawiki
 	##	NOTE: synchronize changes with getGlobalEdits!
 	###################
-	def getGlobalAccounts( self, user, show_zero_edits = False ):
+	def getGlobalAccounts( self, user ):
 		self.trace()
 		self.login()
 

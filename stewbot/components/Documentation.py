@@ -27,7 +27,7 @@
 ##			get( [yell, foo] ) # Says FOO!!!
 ##
 #######################################################
-import copy
+from copy import copy
 from stewbot.components.BaseClass import BaseClass
 
 ###################
@@ -41,7 +41,7 @@ class Documentation( BaseClass ):
 	def __init__( self, tree, logger, default = None ):
 		BaseClass.__init__( self, logger = logger )
 		self.trace()
-		self.tree    = copy.copy( tree )
+		self.tree    = copy( tree )
 		self.default = default
 
 	###################
@@ -60,7 +60,7 @@ class Documentation( BaseClass ):
 		self.trace()
 
 		# handle no keys
-		if len( keys ) == 0:
+		if not len(keys):
 			if default:
 				return default
 			elif self.default:

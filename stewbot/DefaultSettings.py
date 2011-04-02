@@ -91,7 +91,6 @@ config = StrictDict({
 				'wikimedia/Innv':'Innv',
 				'wikimedia/Jamesofur':'Jamesofur',
 				'Wikimedia/Kanonkas':'Kanonkas',
-				'wikimedia/Kylu':'Kylu',
 				'wikimedia/Maximillion-Pegasus':'Maximillion Pegasus',
 				'wikimedia/MuZemike':'Muzemike',
 				'wikimedia/nifky':'Nifky?',

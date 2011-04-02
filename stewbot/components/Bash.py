@@ -142,7 +142,7 @@ class Bash( BaseClass ):
 		self.old.append( self.new.pop(id) )
 
 		# cycle when empty
-		if len(self.new) == 0:
+		if not len(self.new):
 			self.new = self.old
 			self.old = []
 
@@ -192,7 +192,7 @@ class Bash( BaseClass ):
 		self.chloe_old.append( self.chloe_new.pop(i) )
 
 		# cycle when empty
-		if len(self.chloe_new) == 0:
+		if not len(self.chloe_new):
 			self.chloe_new = self.chloe_old
 			self.chloe_old = []
 

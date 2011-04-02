@@ -215,26 +215,6 @@ class BaseClass( object ):
 			logExc
 		)
 
-
-	###########################################################################
-	##	Various
-	###########################################################################
-	def hasIndex( self, obj, i ):
-		"""
-		Indicate whether an object is indexable and has the specified index.
-
-		@param obj: the object to index.
-		@param i: the index value to check the object for.
-		@return boolean: whether the object contains the index.
-		"""
-		self.trace()
-		try:
-			obj[i]
-			return True
-		except:
-			return False
-
-
 	###########################################################################
 	## Private methods
 	###########################################################################
