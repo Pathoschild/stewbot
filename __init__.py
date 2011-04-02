@@ -1,22 +1,9 @@
-#######################################################
-##	__init__.py
-##	Launches the bot.
-##
-##	To-do:
-## 		- check for duplicate commands
-##		- oversight global logs on !stab
-##		- !nuke
-##		- block on Meta when locking
-##		- warning after !lock'ing an account with edits
-##		- list admins by latest activity
-##		- backup RC reader
-#######################################################
+"""
+	Responsible for configuring and launching stewbot.
+"""
 from __config__ import config, documentation
 from stewbot import Stewardbot
 
-###################
-## Launch bot
-###################
 bot = Stewardbot(
 	server           = config.irc.server,
 	port             = config.irc.port,

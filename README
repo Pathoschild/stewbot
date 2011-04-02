@@ -5,4 +5,5 @@ modularized framework, so there are still issues with tight coupling and messy
 code.
 
 To configure stewbot, rename stewardbot/__config__.example.py to
-stewardbot/__config__.py and change the values therein.
+stewardbot/__config__.py and change the values therein. (You can peek at the
+default config values in stewbot/DefaultSettings.py.)

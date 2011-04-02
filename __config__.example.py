@@ -1,8 +1,8 @@
 # -*- coding: utf-8  -*-
-#######################################################
-##	Configuration
-##	Sets constants and settings used by the bot.
-#######################################################
+"""
+	Constants and settings used by the bot. The default settings are inherited
+	from stewbot.DefaultSettings.
+"""
 from DefaultSettings import *
 
 # IRC server
