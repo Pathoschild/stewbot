@@ -3,6 +3,10 @@
 ##	Stewardbot
 ##	Abstracts bot behaviour, interfacing with IRC and web classes.
 #######################################################
+import os, sys
+sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, os.path.dirname(__file__) + '/components/modules')
+
 import copy # shallow copy objects
 import re   # regex
 from stewbot.DefaultSettings import ACCESS_WHITELISTED, ACCESS_OPERATOR
@@ -768,7 +772,7 @@ class Stewardbot( BaseClass ):
 				text += '</div>'
 
 				# keep user up to date
-				self.respond( data, '%s\'s unified accounts have %s edits on %s wikis, saving list to wiki page...' % (args[USER], total_edits, count_wikis) )
+				self.respond( data, '%s\'s unified accounts have %s edits on %s wikis, saving list to wiki page...' % (args[USER], total_edits, count_wikis), dot = False )
 
 				# submit edit
 				revid = self.browser.edit(
@@ -780,7 +784,7 @@ class Stewardbot( BaseClass ):
 				)
 
 				# notify user
-				self.respond( data, 'http://meta.wikimedia.org/wiki/User:StewardBot/Sandbox?oldid=%s' % revid )
+				self.respond( data, 'http://meta.wikimedia.org/wiki/User:StewardBot/Sandbox?oldid=%s' % revid, dot = False )
 
 
 	###################
