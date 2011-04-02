@@ -1,4 +1,4 @@
-from interfaces.ILogger import ILogger
+from stewbot.interfaces.ILogger import ILogger
 
 class LogSilent(ILogger):
 	"""
@@ -8,16 +8,16 @@ class LogSilent(ILogger):
 		"""
 		Get a brief human-readable description of the location of the log,
 		such as "console" or "file 'bot.log'".
-		
+
 		@return str: brief description of location.
 		"""
 		return "nowhere"
-	
-	
+
+
 	def Log(self, message):
 		"""
 		Do nothing.
-		
+
 		@param message: arbitrary message to do nothing with.
 		@return None
 		"""

@@ -1,16 +1,15 @@
 # -*- coding: utf-8  -*-
 import sys
-import time  # throttling
-import copy                   # copying Message instances
-import irclib                 # communicating with the IRC server
-
-from BaseClass import BaseClass
+import time   # throttling
+import copy   # copying Message instances
+from stewbot.components.modules.irclib import irclib # communicating with the IRC server
+from stewbot.components.BaseClass import BaseClass
 
 class IRC( BaseClass ):
 	"""
 	Class responsible for interacting with an IRC server.
 	"""
-	
+
 	###########################################################################
 	##	Initialize
 	###########################################################################

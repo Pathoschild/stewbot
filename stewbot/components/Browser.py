@@ -2,13 +2,12 @@
 ##	Browser
 ##	Abstracts querying and scraping web pages, and parsing APIs.
 #######################################################
-from BeautifulSoup import BeautifulSoup as htmldom
-import mechanize
 import re
-import simplejson
-import xml.dom.minidom as xmldom
-
-from BaseClass import BaseClass
+from stewbot.components.modules import mechanize
+from stewbot.components.modules import simplejson
+from stewbot.components.modules.BeautifulSoup import BeautifulSoup as htmldom
+from stewbot.components.BaseClass import BaseClass
+from xml.dom import minidom as xmldom
 
 ###################
 ##	Browser class
@@ -228,7 +227,7 @@ class Browser( BaseClass ):
 		# load page
 		if visit:
 			self.response = self.browser.open( url, parameters )
-			
+
 			# bugfix -- mechanize confused by <br/>
 			self.response.set_data(self.response.get_data().replace("<br/>", "<br />"))
 			self.browser.set_response(self.response)
@@ -444,7 +443,7 @@ class Browser( BaseClass ):
 					'lgname':self.username,
 					'lgpassword':self.password
 				}, censor_url = True)
-			
+
 			# In MediaWiki 1.15.3+, an extra step is needed
 			except self.LoginTokenRequestedError, token:
 				self.queryApi({
@@ -523,15 +522,15 @@ class Browser( BaseClass ):
 	###################
 	def getBlockStatus( self, user ):
 		self.trace()
-		
+
 		# fetch data
 		if self.isAddress( user ):
 			self.queryApi({
 				'action':'query',
 				'list':'blocks',
 				'bkip':user
-			})			
-		
+			})
+
 		else:
 			self.queryApi({
 				'action':'query',
@@ -539,7 +538,7 @@ class Browser( BaseClass ):
 				'bkusers':user,
 				'bklimit':1
 			})
-	
+
 		# parse
 		blocks = []
 		for block in self.parsed.getElementsByTagName('block'):
@@ -557,15 +556,15 @@ class Browser( BaseClass ):
 				'hidden':block.hasAttribute('hidden')
 			})
 		return blocks
-		
-	
+
+
 	###################
 	##	Get global blocks affecting an IP
 	##	required: setBaseUrl() to metawiki
 	###################
 	def getGlobalBlocks( self, address ):
 		self.trace()
-		
+
 		self.queryApi({
 			'action':'query',
 			'list':'globalblocks',
@@ -840,7 +839,7 @@ class Browser( BaseClass ):
 			raise self.Error, 'no lock or hide preferences specified'
 		if lock not in (True, False, None) or hide not in (True, False, None) or oversightLocal not in (True, False, None):
 			raise self.Error, 'hide and lock preferences must be one of (True, False, None)'
-		
+
 		# load form
 		self.load( title = 'Special:CentralAuth', parameters = {'target':user}, GET = True, visit = True, parse_as = 'html' )
 		try:
@@ -851,7 +850,7 @@ class Browser( BaseClass ):
 		# parse input
 		NAME_LOCK = 'wpStatusLocked'
 		NAME_HIDE = 'wpStatusHidden'
-		
+
 		LOCK_IGNORE = None
 		LOCK_NO     = "0"
 		LOCK_YES    = "1"
@@ -867,11 +866,11 @@ class Browser( BaseClass ):
 			raise self.Error, 'invalid lock constant "%s", valid types are [%s]' % (set_lock, ', '.join([k.name for k in self.browser.find_control(NAME_LOCK).items]))
 		if set_hide != HIDE_IGNORE and set_hide not in [k.name for k in self.browser.find_control(NAME_HIDE).items]:
 			raise self.Error, 'invalid hide constant "%s", valid types are [%s]' % (set_hide, ', '.join([k.name for k in self.browser.find_control(NAME_HIDE).items]))
-		
+
 		# don't implicitly decrease hide level
 		if set_hide == HIDE_LISTS and self.browser[NAME_HIDE][0] == HIDE_SUPPRESSED:
 			set_hide = HIDE_SUPPRESSED
-		
+
 		# command is redundant?
 		if set_lock in [LOCK_IGNORE, self.browser[NAME_LOCK][0]] and set_hide in [HIDE_IGNORE, self.browser[NAME_HIDE][0]]:
 			if ignoreUnchanged:
@@ -884,14 +883,14 @@ class Browser( BaseClass ):
 					error += ' and '
 				error += 'hidden' if set_hide == HIDE_LISTS else 'globally oversighted' if set_hide == HIDE_SUPPRESSED else 'unhidden'
 			raise self.Error, error
-				
+
 		# modify form
 		if set_lock != LOCK_IGNORE:
 			control = self.browser.find_control(NAME_LOCK).get(set_lock).selected = True
 		if set_hide != HIDE_IGNORE:
 			control = self.browser.find_control(NAME_HIDE).get(set_hide).selected = True
 		self.browser["wpReason"] = reason
-		
+
 		self.submit()
 		return True
 
@@ -910,7 +909,7 @@ class Browser( BaseClass ):
 			self.browser.select_form( predicate = lambda form: 'wpMethod' in [item.name for item in form.controls] and form['wpMethod'] == 'set-status' )
 		except mechanize.FormNotFoundError:
 			raise self.Error, 'could not find set-status form from Special:CentralAuth'
-			
+
 		# parse status
 		NAME_LOCK = 'wpStatusLocked'
 		NAME_HIDE = 'wpStatusHidden'
@@ -920,22 +919,22 @@ class Browser( BaseClass ):
 		HIDE_IGNORE = None
 		HIDE_LISTS  = "lists"
 		HIDE_SUPPRESSED = "suppressed"
-		
+
 		is_locked = self.browser[NAME_LOCK][0]
 		is_locked = True if (is_locked == LOCK_YES) else False
-		
+
 		is_hidden = self.browser[NAME_HIDE][0]
 		is_hidden = True if (is_hidden in [HIDE_LISTS, HIDE_SUPPRESSED]) else False
-		
+
 		is_suppressed = True if (is_hidden == HIDE_SUPPRESSED) else False
-		
+
 		# return result
 		return {
 			'locked':is_locked,
 			'hidden':is_hidden,
 			'oversighted':is_suppressed
 		}
-		
+
 	###################
 	##	Get global rights
 	###################

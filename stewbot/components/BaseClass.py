@@ -1,52 +1,55 @@
 import re
 import sys
-import urllib
 import inspect
 import traceback
-import chardet
-import components.Interface as Interface
-import components.modules.Formatting as Formatting
-from components.interfaces.ILogger import ILogger
-from components.LogSilent import LogSilent
+from stewbot.interfaces.ILogger import ILogger
+from stewbot.components.Interface import Interface
+from stewbot.components.LogSilent import LogSilent
+from stewbot.components.modules.Formatting import Formatting
 
 class BaseClass( object ):
 	"""
-	Base class providing common methods for encoding & decoding text, logging
-	messages, handling errors, and manipulating strings.
+	Provides common methods for encoding & decoding text, logging messages,
+	handling errors, and manipulating strings.
 	"""
 
 	class Error( Exception ):
-		"""Base error class"""
+		"""
+		The base error class.
+		"""
+
 	class LoginTokenRequestedError( Error ):
 		"""
-		Indicates a login token must be sent back to complete login (MediaWiki 1.15.3+);
-		the exception message is the token.
+		Error which indicates that a login token must be sent back to complete login (MediaWiki 1.15.3+); the exception
+		message is the token.
 		"""
-	
+
 	###########################################################################
 	##	Constructor
 	###########################################################################
 	def __init__( self, logger ):
 		"""
-		Initialize the base class and validate the logger component.
-		
-		@param logger: the ILogger object tasked with dispatching debug messages.
+			Initialize the base class and validate the logger component.
+
+			@param logger: the ILogger object tasked with dispatching debug messages.
+
+			@type logger: ILogger
 		"""
 		self.logger = logger
 		self.re_address = re.compile( '^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:/(?:1[6-9]|2[0-9]|3[0-2]))?$' )
-		
+
 		Interface.Assert(self.logger, ILogger)
-	
-	
+
+
 	###########################################################################
 	##	String manipulation
 	###########################################################################
 	def Decode(self, input):
 		"""
-		Decode the arbitrary input string into a standard Unicode string.
-		
-		@param input: string to parse.
-		@return unicode: decoded string.
+			Decode the arbitrary input string into a standard Unicode string.
+
+			@param input: string to parse.
+			@return unicode: decoded string.
 		"""
 		return Formatting.Decode(input)
 
@@ -56,7 +59,7 @@ class BaseClass( object ):
 		Encode the arbitrary input string into a raw UTF-8 bytestring. This is
 		necessary when passing text to a third-party module, because most modules
 		are incapable of processing decoded text.
-		
+
 		@param obj: string to parse.
 		@return str: encoded string.
 		"""
@@ -67,17 +70,17 @@ class BaseClass( object ):
 		"""
 		Convert the dict into an escaped HTTP query string, without the leading
 		? character.
-		
+
 		@param obj: dict to parse.
 		@return str: encoded URL query string.
 		"""
 		return Formatting.UrlEncode(obj)
 
-		
+
 	def capitalizeFirstLetter( self, text ):
 		"""
 		Capitalize the first character in the string.
-		
+
 		@param text: string to modify.
 		@return str: modified string.
 		"""
@@ -91,23 +94,23 @@ class BaseClass( object ):
 			text[0] = text[0].upper()
 			text = ''.join(text)
 			return text
-	
+
 
 	def isAddress( self, text ):
 		"""
 		Indicate whether a string represents a valid IP address.
-		
+
 		@param text: string to check.
 		@return bool: whether the string is a valid IP address.
 		"""
 		self.trace()
 		return self.re_address.match( text )
-	
+
 
 	def isInt( self, text ):
 		"""
 		Indicate whether a string represents a valid integer.
-		
+
 		@param text: string to check.
 		@return bool: whether the string is a valid integer.
 		"""
@@ -119,15 +122,15 @@ class BaseClass( object ):
 			return False
 		except ValueError:
 			return False
-	
-	
+
+
 	###########################################################################
 	##	Profiling & error-handling
 	###########################################################################
 	def trace( self, overrides=None ):
 		"""
 		Send debug information about the containing function call to the logger.
-		
+
 		@keyword overrides: a dict of parameter names and values. When printing
 			the parent function call's parameters, this is checked for overrides
 			to display instead of the actual value.
@@ -172,7 +175,7 @@ class BaseClass( object ):
 	def traceMessage( self, msg ):
 		"""
 		Send an arbitrary message to the logger.
-		
+
 		@param msg: string message to send to the logger.
 		@return None
 		"""
@@ -184,7 +187,7 @@ class BaseClass( object ):
 		Fetch details about the last exception raised from the system, dispatch
 		them to the log, and return a simplified summary string suitable for
 		display in the user interface.
-		
+
 		@return (str, str) tuple: simplified summary of exception & detailed
 			stack trace.
 		"""
@@ -200,7 +203,7 @@ class BaseClass( object ):
 		logExc += '### AN EXCEPTION OCCURRED:\n'
 		logExc += '###\n'
 		logExc += '### %s\n' % '\n### '.join( tb.splitlines() )
-	 	logExc += '###'
+		logExc += '###'
 		logExc += '##########################################################'
 		self.logger.Log(logExc)
 
@@ -219,7 +222,7 @@ class BaseClass( object ):
 	def hasIndex( self, obj, i ):
 		"""
 		Indicate whether an object is indexable and has the specified index.
-		
+
 		@param obj: the object to index.
 		@param i: the index value to check the object for.
 		@return boolean: whether the object contains the index.
@@ -231,14 +234,14 @@ class BaseClass( object ):
 		except:
 			return False
 
-	
+
 	###########################################################################
 	## Private methods
 	###########################################################################
 	def _FormatArg( self, value ):
 		"""
 		Format an arbitrary argument for trace output.
-		
+
 		@param value: an arbitrary object to format for output.
 		"""
 		if isinstance(value, BaseClass):

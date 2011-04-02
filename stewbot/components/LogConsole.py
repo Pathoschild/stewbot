@@ -1,6 +1,6 @@
 import time
-from interfaces.ILogger import ILogger
-import Formatting
+from stewbot.interfaces.ILogger import ILogger
+from stewbot.components.modules.Formatting import Formatting
 
 class LogConsole(ILogger):
 	"""
@@ -10,16 +10,16 @@ class LogConsole(ILogger):
 		"""
 		Get a brief human-readable description of the location of the log,
 		such as "console" or "file 'bot.log'".
-		
+
 		@return str: brief description of location.
 		"""
 		return "console"
-	
-	
+
+
 	def Log(self, message):
 		"""
 		Log a message to the console.
-		
+
 		@param message: arbitrary message to log.
 		@return None
 		"""

@@ -28,7 +28,7 @@
 ##
 #######################################################
 import copy
-from BaseClass import BaseClass
+from stewbot.components.BaseClass import BaseClass
 
 ###################
 ## Stewardbot class

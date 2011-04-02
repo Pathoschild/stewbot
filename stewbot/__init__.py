@@ -5,13 +5,13 @@
 #######################################################
 import copy # shallow copy objects
 import re   # regex
-from __config__ import config, documentation, ACCESS_WHITELISTED, ACCESS_OPERATOR
-from components.Bash       import Bash       # !bash - random quotes
-from components.BaseClass  import BaseClass
-from components.CommandParser import CommandParser
-from components.Documentation import Documentation
-from components.IRC        import IRC
-from components.Wikimedia  import Browser    # web interface, listing wikis, handling prefixes, etc
+from stewbot.DefaultSettings import ACCESS_WHITELISTED, ACCESS_OPERATOR
+from stewbot.components.Bash       import Bash       # !bash - random quotes
+from stewbot.components.BaseClass  import BaseClass
+from stewbot.components.CommandParser import CommandParser
+from stewbot.components.Documentation import Documentation
+from stewbot.components.IRC        import IRC
+from stewbot.components.Wikimedia  import Browser    # web interface, listing wikis, handling prefixes, etc
 
 ###################
 ## Stewardbot class
@@ -21,7 +21,7 @@ class Stewardbot( BaseClass ):
 	##	Constructor
 	##	Initializes properties & settings, instantiates required classes.
 	#############################################################################################################
-	def __init__( self, server, port, nick, user, password, channels, ssl, logger, exceptionLogger = None ):
+	def __init__( self, server, port, nick, user, password, channels, ssl, logger, config, documentation, exceptionLogger = None ):
 		BaseClass.__init__( self, logger )
 		self.__name__ = 'Stewardbot'
 		self.trace(overrides = {'password':'<<hidden>>'})
@@ -30,13 +30,14 @@ class Stewardbot( BaseClass ):
 		## Commands
 		#############
 		self.irc_commands = config.irc.commands
-		
+
 		#############
 		## Configuration
 		#############
 		# exception logger
+		self.config = config
 		self.exceptionLogger = (exceptionLogger if exceptionLogger is not None else logger)
-		
+
 		# default runtime config
 		self.options = {
 			'confirm_all':config.irc.confirm_all
@@ -181,7 +182,7 @@ class Stewardbot( BaseClass ):
 			self.exceptionLogger.Log(dump)
 			if self.exceptionLogger.GetLocationString() is not self.logger.GetLocationString():
 				self.logger.Log("Exception details sent to exception dump log (%s)" % self.exceptionLogger.GetLocationString())
-			
+
 			# notify IRC users
 			irc_error = 'An unhandled exception has occurred: %s.' % summary
 			irc_text  = 'Exception details have been sent to the log (%s)' % self.logger.GetLocationString()
@@ -355,7 +356,7 @@ class Stewardbot( BaseClass ):
 		# prepare reason
 		if len(args) <= REASON:
 			if lock or hide:
-				args.append( config.web.default_ca_reason )
+				args.append( self.config.web.default_ca_reason )
 			else:
 				args.append('')
 
@@ -465,7 +466,7 @@ class Stewardbot( BaseClass ):
 		self.trace()
 		args = data.args
 		TARGET = 0
-		
+
 		##########
 		## Initialize & validate
 		##########
@@ -477,14 +478,14 @@ class Stewardbot( BaseClass ):
 		except self.Error, e:
 			self.respond( data, e )
 			return
-		
+
 		##########
 		## Fetch global
 		##########
 		out = ''
 		if self.isAddress( user ):
 			out = 'IP address; '
-			
+
 			# global blocks
 			items = self.browser.getGlobalBlocks(user)
 			if len(items) == 0:
@@ -496,13 +497,13 @@ class Stewardbot( BaseClass ):
 					expiry = block['expiry'][:-4].replace('T', ' ')
 					gblocks.append( '%s until %s' % (target, expiry) )
 				out += 'affected by global blocks: [%s]' % ', '.join(gblocks)
-		
+
 		else:
 			# global account status
 			try:
 				status = self.browser.getCentralAuthStatus( user )
 				out = 'Global account; '
-				
+
 				if status['locked'] or status['hidden'] or status['oversighted']:
 					if status['locked']:
 						out += 'locked'
@@ -514,10 +515,10 @@ class Stewardbot( BaseClass ):
 						out += 'oversighted'
 				else:
 					out += 'no global restrictions'
-							
+
 			except self.Error:
 				out = 'Not a global account'
-			
+
 		##########
 		## Fetch local blocks
 		##########
@@ -537,13 +538,13 @@ class Stewardbot( BaseClass ):
 			self.respond( data, e )
 		finally:
 			self.unhandleAt()
-		
+
 		##########
 		## Send response
 		##########
 		self.respond( data, out )
 
-	
+
 	###################
 	##	!gblock
 	###################
@@ -608,7 +609,7 @@ class Stewardbot( BaseClass ):
 		# normal cases
 		try:
 			if TOPIC in args and args[TOPIC].lower() == 'config':
-				self.respond( data, self.help.get(args), '"%s" is not a recognized configuration option. Type "!help > config" for documentation' % args[OPTION] )
+				self.respond( data, self.help.get(args), '"%s" is not a recognized configuration option. Type "!help > config" for documentation' % args[TOPIC] )
 			else:
 				self.respond( data, self.help.get(args) )
 
@@ -843,7 +844,7 @@ class Stewardbot( BaseClass ):
 		# validate args
 		if self.syntaxError( data, count=[2,3] ):
 			return
-		if self.syntaxError( data, 'invalid wikiset id', condition = self.isInt(args[ID]) and int(args[ID]) in config.web.wikiset_ids.keys() ):
+		if self.syntaxError( data, 'invalid wikiset id', condition = self.isInt(args[ID]) and int(args[ID]) in self.config.web.wikiset_ids.keys() ):
 			return
 
 		# prepare reason
@@ -1005,7 +1006,7 @@ class Stewardbot( BaseClass ):
 			return
 		if self.syntaxError( data, 'unknown hide option', condition=(len(data.args) <= OPTS or data.args[OPTS].lower() == 'hard') ):
 			return
-				
+
 		# unpack
 		user  = data.args[USER]
 		hideWhenEdits = (len(data.args) > OPTS and data.args[OPTS].lower() == 'hard')
@@ -1051,7 +1052,7 @@ class Stewardbot( BaseClass ):
 		for wiki in wikis:
 			try:
 				self.handleAt( wiki )
-				
+
 				##########
 				## Collect account details
 				##########
@@ -1059,12 +1060,12 @@ class Stewardbot( BaseClass ):
 				_counts = self.browser.countUserEdits( user )
 				(edits, top_edits, new_pages, unreverted) = (_counts['edits'], _counts['top'], _counts['new'], _counts['unreverted'])
 				blocked = skipped = False
-				
+
 				# block status
 				curBlock = self.browser.getBlockStatus( user )
 				curBlock = False if (len(curBlock) == 0) else curBlock[0]
 				curHidden = curBlock and curBlock['hidden']
-				
+
 				# report text
 				msgPrefix = '[%s:%s]' % (count_wikis, wiki)
 				notes = ''
@@ -1077,7 +1078,7 @@ class Stewardbot( BaseClass ):
 					)
 				elif edits:
 					notes = ' (%s edits)' % edits
-				
+
 				# block options
 				if hide and (not edits or hideWhenEdits):
 					result   = 'blockhidden'
@@ -1096,15 +1097,15 @@ class Stewardbot( BaseClass ):
 				if not hide and wiki in ['enwikibooks']:
 					action = 'no block by local request'
 					skipped = True
-					
+
 				elif curHidden and curHidden == hide:
 					result = 'already %s' % result
 					skipped = True
-				
+
 				elif curHidden:
 					result = 'account is hidden, skipped'
 					skipped = True
-					
+
 				else:
 					if not self.browser.block(
 						user    = user,
@@ -1119,7 +1120,7 @@ class Stewardbot( BaseClass ):
 					):
 						result = 'already %s' % result
 						skipped = True
-					
+
 				##########
 				## Execute
 				##########
@@ -1179,7 +1180,7 @@ class Stewardbot( BaseClass ):
 
 		# dispatch queries
 		if count > 1:
-			self.respond( data, 'blocking "%s" on %s %s..' % (user, count, pluralize(count, 'wiki')) )
+			self.respond( data, 'blocking "%s" on %s %s..' % (user, count, ('wiki' if count == 1 else 'wikis')) )
 
 		action = 'blocked & hidden' if hidename else 'blocked'
 		for wiki in wikis:
@@ -1257,7 +1258,7 @@ class Stewardbot( BaseClass ):
 
 		# dispatch queries
 		if count > 1:
-			self.respond( data, 'unblocking "%s" on %s %s..' % (user, count, pluralize(count, 'wiki')) )
+			self.respond( data, 'unblocking "%s" on %s %s..' % (user, count, ('wiki' if count == 1 else 'wikis')) )
 
 		for wiki in wikis:
 			try:

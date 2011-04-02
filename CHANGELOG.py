@@ -1,6 +1,10 @@
-version = 'r21' # version reported by stewbot
+version = 'r22-alpha' # version reported by stewbot
 
 """
+2011-04-01 r22
+	- new configuration: toggle handling of !commit command;
+	- new explicit package (simpler, less conflicts, more robust).
+
 2011-03-29 r21
 	- bugfix: Wikimedia handler assigned incorrect family for betwikiversity.
 
@@ -33,7 +37,7 @@ version = 'r21' # version reported by stewbot
 	  to send exceptions to ERROR_LOG.txt in the bot directory.
 	- abstracted string encoding, fixed encoding crash when logging non-latin
 	  characters.
-	
+
 2010-06-28 r13
 	- added configurable logging/output (messages can now be sent to console, file, or nowhere);
 	- prefer packaged modules over system modules (resolves version conflicts);

@@ -3,9 +3,8 @@
 ##	Bash
 ##	Provides methods that return random quotes taken from <http://meta.wikimedia.org/wiki/Bash>.
 #######################################################
-import sys
 import random
-from BaseClass import BaseClass
+from stewbot.components.BaseClass import BaseClass
 
 ###################
 ## Bash class
@@ -111,7 +110,7 @@ class Bash( BaseClass ):
 			'Hmph. Not fair!'
 		]
 		self.chloe_old = []
-		
+
 		self.exit_new = [
 			'Laaaaze. :D',
 			'Wai so srs? ._.',
@@ -205,7 +204,7 @@ class Bash( BaseClass ):
 	###################
 	def exitMessage( self ):
 		self.trace()
-		
+
 		i = random.randint( 0, len(self.exit_new) - 1 )
 		return self.exit_new[i]
 
