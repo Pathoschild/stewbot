@@ -3,7 +3,7 @@
 	Constants and settings used by the bot. The default settings are inherited
 	from stewbot.DefaultSettings.
 """
-from DefaultSettings import *
+from stewbot.DefaultSettings import *
 
 # IRC server
 config.irc.server   = 'irc.freenode.net'  # The IRC network to connect to.
