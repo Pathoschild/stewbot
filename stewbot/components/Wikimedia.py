@@ -80,7 +80,15 @@ class Browser( BaseBrowser ):
 					family = wiki['code'],
 					domain = wiki['url'].replace('http://', '')
 				)
-				
+
+		# HACK: workaround for https://bugzilla.wikimedia.org/show_bug.cgi?id=28393
+		for wiki in [('ba', 'wiktionary'), ('liquidthreads_labs', 'wikimedia'), ('tokipona', 'wiki'), ('tokipona', 'wikiquote'), ('tokipona', 'wikibooks'), ('tokipona', 'wiktionary')]:
+			self.storeWiki(
+				code = wiki[0],
+				family = wiki[1],
+				domain = '%s.%s.no.longer.exists' % (wiki[0], wiki[1])
+			)
+
 		# cache data and discard raw result
 		self.writeCache()
 		del self.parsed

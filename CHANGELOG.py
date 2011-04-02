@@ -1,6 +1,8 @@
 """
 2011-04-01 r22
-	- new configuration: toggle handling of !commit command.
+	- new configuration: toggle handling of !commit command;
+	- use new API modules for getGlobalRights;
+	- use new API modules for getGlobalDetails (merged from getGlobalAccounts and getGlobalEdits);
 	- simplified package design.
 
 2011-03-29 r21
@@ -88,4 +90,4 @@
 2010-03-26 r1
 	- now open-source; initial commit.
 """
-version = 'r22-alpha' # version reported by stewbot
+version = 'r22' # version reported by stewbot
