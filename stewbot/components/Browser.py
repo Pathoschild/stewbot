@@ -775,7 +775,7 @@ class Browser( BaseClass ):
 		self.trace()
 		self.login()
 
-		# << NEW API CODE, WAITING FOR API USERRIGHTS TOKEN BUG >>
+		# API code fails: cannot use username@wiki syntax through Meta API
 		## split into add/remove arrays
 		#add    = []
 		#remove = []
@@ -818,6 +818,52 @@ class Browser( BaseClass ):
 		# submit form
 		self.browser.form['user-reason'] = reason
 		self.submit()
+
+
+	###################
+	##	Scan global account's local accounts
+	###################
+	def getGlobalDetails( self, user, show_zero_edits = False ):
+		self.trace()
+		self.login()
+
+		# query API
+		self.queryApi({
+			'action':'query',
+			'meta':'globaluserinfo',
+			'guiuser':user,
+			'guiprop':'merged'
+		}, GET = True)
+
+		# process result
+		wikis = []
+		items = self.parsed.getElementsByTagName( 'merged' )[0].getElementsByTagName( 'account' )
+		for item in items:
+			wiki = {
+				'wiki': item.getAttribute('wiki'),
+				'timestamp': item.getAttribute('timestamp'),
+				'method': item.getAttribute('method'),
+				'edits': int(item.getAttribute('editcount'))
+			}
+			if show_zero_edits or wiki['edits']:
+				wikis.append(wiki)
+		return wikis
+
+
+	###################
+	##	Get global rights
+	###################
+	def getGlobalRights( self, user ):
+		self.trace()
+
+		self.queryApi({
+			'action':'query',
+			'meta':'globaluserinfo',
+			'guiuser':user,
+			'guiprop':'groups'
+		})
+
+		return [node.childNodes[0].nodeValue for node in self.parsed.getElementsByTagName( 'g' )]
 
 
 	###########################################################################
@@ -929,15 +975,6 @@ class Browser( BaseClass ):
 			'oversighted':is_suppressed
 		}
 
-	###################
-	##	Get global rights
-	###################
-	def getGlobalRights( self, user ):
-		self.trace()
-
-		self.load( url = 'http://toolserver.org/~pathoschild/api/', parameters = {'action':'gblrights', 'user':user}, GET = True, parse_as = 'xml' )
-		return self.stripHtml( self.parsed.getElementsByTagName('result')[0].getAttribute('info') )
-
 
 	###################
 	##	Global(Un)Block
@@ -994,63 +1031,6 @@ class Browser( BaseClass ):
 
 	def global_unblock( self, address, reason ):
 		return self.globalBlock( address, reason, lock = False )
-
-
-	###################
-	##	Scan global account's local accounts
-	##	required: setBaseUrl() to metawiki
-	##	NOTE: synchronize changes with getGlobalEdits!
-	###################
-	def getGlobalAccounts( self, user ):
-		self.trace()
-		self.login()
-
-		# load form
-		self.load( title = 'Special:CentralAuth', parameters = {'target':user}, GET = True, parse_as = 'html' )
-
-		# extract wiki rows
-		fields = self.parsed.findAll( attrs = {'name':'wpWikis[]'} )
-
-		# extract counts
-		wikis = []
-		for field in fields:
-			wikis.append( field['value'] )
-
-		# done
-		return wikis
-
-
-	###################
-	## 	Scan global account's edits
-	##	required: setBaseUrl() to metawiki
-	##	NOTE: synchronize changes with getGlobalAccounts!
-	###################
-	def getGlobalEdits( self, user, show_zero_edits = False ):
-		self.trace()
-		self.login()
-
-		# load form
-		self.load( title = 'Special:CentralAuth', parameters = {'target':user}, GET = True, parse_as = 'html' )
-
-		# extract wiki rows
-		form = self.parsed.find( id = 'mw-centralauth-merged' )
-		table = form.find( 'table' )
-		rows = table.findAll( 'tr' )
-		rows.pop( 0 )              # ignore header
-		rows.pop( len(rows) - 1 )  # ignore footer
-
-		# extract counts
-		edits = {}
-		for row in rows:
-			fields = row.findAll( 'td' )
-			wiki  = fields[1].find( 'a' ).string
-			count = int( fields[5].find( 'a').string.replace( ',', '' ) )
-
-			if count>0 or show_zero_edits:
-				edits[wiki] = count
-
-		# done
-		return edits
 
 
 	###################

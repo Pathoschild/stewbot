@@ -728,41 +728,47 @@ class Stewardbot( BaseClass ):
 		# handle global account
 		args[USER] = self.capitalizeFirstLetter( args[USER] )
 		try:
-			edits = self.browser.getGlobalEdits( args[USER] )
+			wikis = self.browser.getGlobalDetails( args[USER] )
 		except self.Error, e:
 			self.respond( data, e )
 			return
-		count_wikis = len( edits )
+		count_wikis = len( wikis )
 
-		if not len(edits):
+		if not len(wikis):
 			self.respond( data, '%s\'s unified accounts have no edits' % args[USER] )
 		else:
 			path = '/wiki/Special:Contributions?%s' % self.UrlEncode( {'target':args[USER]} )
-			total_edits = sum( edits.values() )
-			sorted_items = sorted( edits.items(), key = lambda (k,v): (v,k), reverse = True ) # order by edits desc
+			total_edits = sum([ wiki['edits'] for wiki in wikis ])
+			wikis = sorted( wikis, key = lambda wiki: wiki['edits'], reverse = True ) # order by edits desc
 
 			# list in channel
-			if len( edits ) < 3:
+			if count_wikis < 3:
 				self.respond( data, 'Listing %s edits on %s wikis by %s\'s unified accounts..' % (total_edits, count_wikis, args[USER]), nick = False )
-				for wiki,count in sorted_items:
-					self.respond( data, "%s:  %s edits at http://%s%s" % (count_wikis, count, wiki, path), nick = False )
+				for wiki in wikis:
+					url = self.browser.getUrl( prefix = wiki['wiki'], path = path )
+					self.respond( data, "%s:  %s edits at http://%s" % (count_wikis, wiki['edits'], url), nick = False )
 					count_wikis -= 1
 
 			# regular mode
-			elif len( edits ) < 20:
+			elif count_wikis < 20:
 				self.respond( data, '%s\'s unified accounts have %s edits on %s wikis, sending links in private query' % (args[USER], total_edits, count_wikis) )
 				self.respondPrivately( data, 'Listing %s edits on %s wikis by %s\'s unified accounts..' % (total_edits, count_wikis, args[USER]) )
-				for wiki,count in sorted_items:
-					self.respondPrivately( data, "%s:  %s edits at http://%s%s" % (count_wikis, count, wiki, path) )
+				for wiki in wikis:
+					url = self.browser.getUrl( prefix = wiki['wiki'], path = path )
+					self.respondPrivately( data, "%s:  %s edits at http://%s" % (count_wikis, wiki['edits'], url) )
 					count_wikis -= 1
 
 			# too many, faster to post online
 			else:
 				# build text
 				text = '<div class="plainlinks">\n edits by global account "%s"\n edits\twiki\n' % args[USER]
-				for wiki,count in sorted_items:
-					text += ' %s \t [http://%s%s %s]\n' % (count, wiki, path, wiki)
+				for wiki in wikis:
+					url = self.browser.getUrl( prefix = wiki['wiki'], path = path )
+					text += ' %s \t [%s %s]\n' % (wiki['edits'], url, wiki['wiki'])
 				text += '</div>'
+
+				# keep user up to date
+				self.respond( data, '%s\'s unified accounts have %s edits on %s wikis, saving list to wiki page...' % (args[USER], total_edits, count_wikis) )
 
 				# submit edit
 				revid = self.browser.edit(
@@ -774,7 +780,7 @@ class Stewardbot( BaseClass ):
 				)
 
 				# notify user
-				self.respond( data, '%s\'s unified accounts have %s edits on %s wikis <http://meta.wikimedia.org/wiki/User:StewardBot/Sandbox?oldid=%s>' % (args[USER], total_edits, count_wikis, revid) )
+				self.respond( data, 'http://meta.wikimedia.org/wiki/User:StewardBot/Sandbox?oldid=%s' % revid )
 
 
 	###################
@@ -1352,11 +1358,11 @@ class Stewardbot( BaseClass ):
 			global_groups = self.browser.getGlobalRights( user )
 
 			# report
-			if not len( local_groups ) and not global_groups:
+			if not len( local_groups ) and not len( global_groups ):
 				self.respond( data, '%s is in no %s or global groups' % (user, wiki) )
 			else:
 				msg = '%s@%s is in local groups [%s]' % (user, wiki, ', '.join( local_groups )) if len( local_groups ) else '%s@%s is in no local groups' % (user, wiki)
-				msg += ', and global groups [%s]' % global_groups if global_groups else ', and no global groups'
+				msg += ', and global groups [%s]' % ', '.join( global_groups ) if len( global_groups ) else ', and no global groups'
 				self.respond( data, msg )
 
 		except self.Error, e:
@@ -1403,10 +1409,11 @@ class Stewardbot( BaseClass ):
 		(user, wiki) = self.splitIdentifier( identifier, allowImplicit = allowImplicit )
 		if wiki == 'global':
 			if allowGlobal:
+				wikis = [wiki['wiki'] for wiki in self.browser.getGlobalDetails( user, True )]
 				if getUsername:
-					return user, self.browser.getGlobalAccounts( user )
+					return user, wikis
 				else:
-					return self.browser.getGlobalAccounts( user )
+					return wikis
 			else:
 				raise self.Error, '\'global\' is not allowed in this context'
 		else:

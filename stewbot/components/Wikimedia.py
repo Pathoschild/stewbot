@@ -80,7 +80,7 @@ class Browser( BaseBrowser ):
 					family = wiki['code'],
 					domain = wiki['url'].replace('http://', '')
 				)
-
+				
 		# cache data and discard raw result
 		self.writeCache()
 		del self.parsed
