@@ -15,7 +15,7 @@ from stewbot.components.StrictDict import StrictDict
 ## Overall configuration
 ###################
 ACCESS_OPEN, ACCESS_WHITELISTED, ACCESS_OPERATOR = (0, 1, 2)
-version = 'r22'
+VERSION = 'r22'
 
 config = StrictDict({
 	###################
@@ -176,7 +176,7 @@ config.irc.commands = config.irc.commands_by_level[ACCESS_OPEN] + config.irc.com
 CONFIG_OPTIONS = ['confirm_all'] # used in "config" topic
 documentation = {
 	# special documentation
-	None:'I\'m a steward utility script, running stewbot %s. See: \'!help access\', \'!help commands\', or \'!help status\'' % CHANGELOG.version,
+	None:'I\'m a steward utility script, running stewbot %s. See: \'!help access\', \'!help commands\', or \'!help status\'' % VERSION,
 	'ACCESS':'commands are either open (anyone can issue them), whitelisted (whitelisted users only), or restricted (only operators, or whitelisted users if an operator !commit\'s them)',
 	'ACCESSLIST':'operators: [%s]; whitelisted users: [%s]' % (', '.join(config.irc.wiki_names_by_level[ACCESS_OPERATOR].values()), ', '.join(config.irc.wiki_names_by_level[ACCESS_WHITELISTED].values())),
 	'commands':'recognized commands: open [%s]; whitelisted [%s]; restricted [%s]. Say \'!help command_here\' for help on a specific command' % (', '.join(config['irc']['commands_by_level'][ACCESS_OPEN]), ', '.join(config['irc']['commands_by_level'][ACCESS_WHITELISTED]), ', '.join(config['irc']['commands_by_level'][ACCESS_OPERATOR])),
