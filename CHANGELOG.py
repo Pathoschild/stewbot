@@ -90,4 +90,3 @@
 2010-03-26 r1
 	- now open-source; initial commit.
 """
-version = 'r22' # version reported by stewbot

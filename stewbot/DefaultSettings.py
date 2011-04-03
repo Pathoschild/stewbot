@@ -7,7 +7,6 @@
 ##      to __config__.py, and override settings in that file.
 #######################################################
 import os
-import CHANGELOG
 from stewbot.components.LogConsole import LogConsole
 from stewbot.components.LogFile import LogFile
 from stewbot.components.StrictDict import StrictDict
@@ -16,6 +15,7 @@ from stewbot.components.StrictDict import StrictDict
 ## Overall configuration
 ###################
 ACCESS_OPEN, ACCESS_WHITELISTED, ACCESS_OPERATOR = (0, 1, 2)
+version = 'r22'
 
 config = StrictDict({
 	###################
