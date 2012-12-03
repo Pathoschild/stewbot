@@ -37,6 +37,12 @@ class BaseClass( object ):
 		"""
 		self.logger = logger
 		self.re_address = re.compile( '^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:/(?:1[6-9]|2[0-9]|3[0-2]))?$' )
+		self.re_ipv6_address = re.compile(
+			'^(?::(?::|(?::([0-9A-Fa-f]{1,4})){1,7})|([0-9A-Fa-f]{1,4})(?::([0-9A-Fa-f]{1,4})){0,6}' + \
+			'::|([0-9A-Fa-f]{1,4})(?::([0-9A-Fa-f]{1,4})){0,5}::([0-9A-Fa-f]{1,4})|([0-9A-Fa-f]{1,4})' + \
+			'(?::(?P<abn>:(?P<iabn>))?([0-9A-Fa-f]{1,4})(?!:(?P=abn))){1,5}:([0-9A-Fa-f]{1,4})(?P=iabn)' + \
+			'|([0-9A-Fa-f]{1,4})(?::([0-9A-Fa-f]{1,4})){7})(?:\/(12[0-8]|1[01][0-9]|[1-9]?\d))?$'
+		)
 
 		Interface.Assert(self.logger, ILogger)
 
@@ -104,7 +110,7 @@ class BaseClass( object ):
 		@return bool: whether the string is a valid IP address.
 		"""
 		self.trace()
-		return self.re_address.match( text )
+		return self.re_address.match( text ) or self.re_ipv6_address.match( text )
 
 
 	def isInt( self, text ):
