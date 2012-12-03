@@ -1,0 +1,11 @@
+# Project specific files
+/__config__.py
+stewbot/ERROR_LOG.txt
+stewbot/components/Wikimedia.cache
+
+# Python files
+*.py[cod]
+
+# Editors
+*~
+sublime-*
