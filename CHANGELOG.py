@@ -1,4 +1,7 @@
 """
+2012-12-03 r23
+	- added support for IPv6 addresses in commands (Issue #18)
+
 2011-04-01 r22
 	- new configuration: toggle handling of !commit command;
 	- use new API modules for getGlobalRights;

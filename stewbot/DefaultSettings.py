@@ -15,7 +15,7 @@ from stewbot.components.StrictDict import StrictDict
 ## Overall configuration
 ###################
 ACCESS_OPEN, ACCESS_WHITELISTED, ACCESS_OPERATOR = (0, 1, 2)
-VERSION = 'r22'
+VERSION = 'r23'
 
 config = StrictDict({
 	###################
